@@ -7,9 +7,9 @@ from scipy.stats import wasserstein_distance
 # Definition of the Marchenko-Pastur density
 def marchenko_pastur_pdf(x, Q, sigma=1):
     y = 1 / Q
-    b = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)  # Largest eigenvalue
-    a = np.power(sigma * (1 - np.sqrt(1 / Q)), 2)  # Smallest eigenvalue
-    return (1 / (2 * np.pi * sigma * sigma * x * y)) * np.sqrt((b - x) * (x - a)) * (0 if (x > b or x < a) else 1)
+    lamda_plus = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)  # Largest eigenvalue
+    lamda_minus = np.power(sigma * (1 - np.sqrt(1 / Q)), 2)  # Smallest eigenvalue
+    return (1 / (2 * np.pi * sigma**2 * x * y)) * np.sqrt((lamda_plus - x) * (x - lamda_minus)) * (0 if (x > lamda_plus or x < lamda_minus) else 1)
 
 def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
     # Eigendecomposition for Hermitian matrix
@@ -32,10 +32,10 @@ def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_only.csv", index_col='Date')
 prices.dropna(axis='columns', inplace=True)
 equity_returns = np.log(prices).diff()[1:]
-smoothing_rate_global = 180
+smoothing_rate_global = 120
 
 # Automatically  rename sector labels
-sectors_labels = ["Industrials", "Health Care", "Communication Services", "Information Technology", "Utilities", "Financials",
+sectors_labels = ["Health Care", "Industrials", "Communication Services", "Information Technology", "Utilities", "Financials",
            "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary"]
 
 # Replace column names for prices and returns
@@ -51,8 +51,9 @@ for i in range(len(sectors_labels)): # len(sector_labels)
     # Smoothing rate
     smoothing_rate = smoothing_rate_global
 
-    for j in range(smoothing_rate, 1000): # len(equity_returns)
-        correlation = sector_slice.iloc[(j-smoothing_rate):j, :].corr()
+    for j in range(smoothing_rate, len(equity_returns)): # len(equity_returns)
+        slice_check = sector_slice.iloc[(j - smoothing_rate):j, :]
+        correlation = np.nan_to_num(sector_slice.iloc[(j-smoothing_rate):j, :].corr())
         T = smoothing_rate_global
         N = sector_slice.shape[1]  # Pandas does the reverse of what I wrote in the first section
         Q = T / N
@@ -67,11 +68,10 @@ for i in range(len(sectors_labels)): # len(sector_labels)
 
     # Append full trajectory to sector trajectories
     sector_trajectories.append(theoretical_empirical_dist)
+    print(sectors_labels[i])
     print(i)
 
 # Set date index for the plot
-# date_index = pd.date_range('01-01-2000','08-10-2020',len(equity_returns)).strftime('%Y-%m-%d')
-# date_index_slice = date_index[smoothing_rate_global:]
 # Plot all trajectories
 for i in range(len(sector_trajectories)):
     plt.plot(sector_trajectories[i], label=sectors_labels[i])
