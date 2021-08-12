@@ -26,7 +26,7 @@ def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
     x_max = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)
     x = np.linspace(x_min, x_max, 5000)
 
-    return wasserstein_distance(e, f(x)), e, f(x)
+    return wasserstein_distance(u_values=e, v_values=x, v_weights=f(x))
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_only.csv", index_col='Date')
@@ -59,7 +59,7 @@ for i in range(len(sectors_labels)): # len(sector_labels)
         Q = T / N
 
         # Compute distance between theoretical and empirical distribution
-        dist, e_vect, f_vect = eigenvalue_distribution_distance(correlation, Q, sigma=1)
+        dist = eigenvalue_distribution_distance(correlation, Q, sigma=1)
 
         # Append to list
         theoretical_empirical_dist.append(dist)
