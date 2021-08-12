@@ -26,7 +26,7 @@ def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
     x_max = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)
     x = np.linspace(x_min, x_max, 5000)
 
-    return wasserstein_distance(e, f(x))
+    return wasserstein_distance(e, f(x)), e, f(x)
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_only.csv", index_col='Date')
@@ -59,7 +59,7 @@ for i in range(len(sectors_labels)): # len(sector_labels)
         Q = T / N
 
         # Compute distance between theoretical and empirical distribution
-        dist = eigenvalue_distribution_distance(correlation, Q, sigma=1)
+        dist, e_vect, f_vect = eigenvalue_distribution_distance(correlation, Q, sigma=1)
 
         # Append to list
         theoretical_empirical_dist.append(dist)
@@ -73,8 +73,16 @@ for i in range(len(sectors_labels)): # len(sector_labels)
 
 # Set date index for the plot
 # Plot all trajectories
+total_dist_deviation = []
 for i in range(len(sector_trajectories)):
     plt.plot(sector_trajectories[i], label=sectors_labels[i])
+    total_dist_deviation.append([sectors_labels[i], np.sum(sector_trajectories[i])])
 plt.legend()
+plt.savefig("RMT_sector_dist_deviation")
 plt.show()
+
+# Make it an array
+total_dist_deviation = np.array(total_dist_deviation)
+total_dist_dev_ordered = total_dist_deviation[total_dist_deviation[:, 1].argsort()]
+print(total_dist_dev_ordered)
 
