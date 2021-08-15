@@ -36,7 +36,7 @@ sectors_lengths = [] #
 for i in range(len(sectors_labels)):
     sector_names = equity_returns.filter(like=sectors_labels[i])
     length = len(sector_names.iloc[0])
-    sectors_lengths.append(length)
+    sectors_lengths.append(length) #
 
 # Plot normalized eigenvectors
 eigen_labels = [2,3,4,5]
