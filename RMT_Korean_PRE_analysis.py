@@ -11,8 +11,9 @@ prices.dropna(axis='columns', inplace=True)
 equity_returns = np.log(prices).diff()[1:]
 
 # Automatically  rename sector labels
-sectors_labels = ["Health Care", "Industrials", "Communication Services", "Information Technology", "Utilities", "Financials",
+sectors_labels = ["#N/A", "Health Care", "Industrials", "Communication Services", "Information Technology", "Utilities", "Financials",
            "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary", "Energy"]
+sectors_labels.sort()
 
 # Replace column names for prices and returns
 equity_returns = equity_returns.reindex(sorted(equity_returns.columns), axis=1)
@@ -26,13 +27,24 @@ vecs_array_slice = vecs_array[:,1:5]
 normalized_eigenvectors = []
 for i in range(len(vecs_array_slice[0])):
     eigenvector_raw = vecs_array_slice[:,i]
-    normalisation = np.sqrt(np.sum(vecs_array_slice[:,i]**2))
+    normalisation = np.linalg.norm(vecs_array_slice[:,i])
     norm_eigenvector = eigenvector_raw/normalisation
     normalized_eigenvectors.append(norm_eigenvector)
 
+# Get number of stocks in each sector
+sectors_lengths = []
+for i in range(len(sectors_labels)):
+    sector_names = equity_returns.filter(like=sectors_labels[i])
+    length = len(sector_names.iloc[0])
+    sectors_lengths.append(length)
+
 # Plot normalized eigenvectors
 eigen_labels = [2,3,4,5]
+cps = np.cumsum(sectors_lengths)
+grid = np.linspace(0, len(normalized_eigenvectors[0]), len(normalized_eigenvectors[0]))
 for i in range(len(normalized_eigenvectors)):
-    plt.hist(normalized_eigenvectors[i], bins=346)
+    plt.bar(grid, np.abs(normalized_eigenvectors[i])**2)
+    for j in range(len(cps)):
+        plt.axvline(cps[j], color='red', alpha=0.25)
     plt.title("Eigenvector "+str(eigen_labels[i]))
     plt.show()
