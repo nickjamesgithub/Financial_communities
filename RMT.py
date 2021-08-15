@@ -36,7 +36,7 @@ smoothing_rate_global = 120
 
 # Automatically  rename sector labels
 sectors_labels = ["Health Care", "Industrials", "Communication Services", "Information Technology", "Utilities", "Financials",
-           "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary"]
+           "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary", "Energy"]
 
 # Replace column names for prices and returns
 prices.columns = prices.columns.str.replace('(\.\d+)$','')
