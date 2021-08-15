@@ -32,7 +32,7 @@ for i in range(len(vecs_array_slice[0])):
     normalized_eigenvectors.append(norm_eigenvector)
 
 # Get number of stocks in each sector
-sectors_lengths = []
+sectors_lengths = [] #
 for i in range(len(sectors_labels)):
     sector_names = equity_returns.filter(like=sectors_labels[i])
     length = len(sector_names.iloc[0])
