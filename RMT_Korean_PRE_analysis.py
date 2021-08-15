@@ -23,7 +23,7 @@ vals, vecs = linalg.eigsh(np.nan_to_num(equity_returns.corr()))
 vecs_array = np.array(vecs)
 vecs_array_slice = vecs_array[:,1:5]
 
-# Construct Normalised eigenvectors
+# Construct Normalised eigenvectors test
 normalized_eigenvectors = []
 for i in range(len(vecs_array_slice[0])):
     eigenvector_raw = vecs_array_slice[:,i]
