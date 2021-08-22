@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 np.random.seed(1234)
 
 # Choose number of sectors and n for simulation
-num_sectors = 4
+num_sectors = 10
 n = 30
 sample_per_sector = n//num_sectors
 
@@ -29,8 +29,7 @@ first_eigenvalue_samples = []
 
 while len(first_eigenvalue_samples) < 5:
     # First pick n sectors at random
-    # sector_sequence = list(np.linspace(0,9,10))
-    sector_sequence = list(np.linspace(0,10,11)) # Randomly draw sector numbers
+    sector_sequence = list(np.linspace(0,len(sectors_labels)-1,len(sectors_labels))) # Randomly draw sector numbers
     random_list_sector = random.sample(sector_sequence, num_sectors)
     ints = [int(item) for item in random_list_sector]
 
@@ -56,19 +55,6 @@ while len(first_eigenvalue_samples) < 5:
             stock_slice = random_sector_stocks.iloc[:, j]
             stock_slice_list = list((stock_slice[1:]).astype("float"))
             stock_samples.append(stock_slice_list)
-
-#     for i in range(len(random_sector_list)):
-#         sector_slice = prices[random_sector_list[i]]
-#         print(random_sector_list[i])
-#         length = len(sector_slice.columns)
-#         random_sequence = list(np.linspace(0, length-1, length))
-#         random_list = random.sample(sector_sequence, sample_per_sector)
-#         ints = [int(item) for item in random_list]
-#         random_sector_stocks = sector_slice.iloc[:,ints]
-#         for j in range(len(random_sector_stocks.iloc[0])):
-#             stock_slice = random_sector_stocks.iloc[:,j]
-#             stock_slice_list = list((stock_slice[1:]).astype("float"))
-#             stock_samples.append(stock_slice_list)
 
     # Convert back into a dataframe
     stock_samples_df = pd.DataFrame(np.transpose(stock_samples))
