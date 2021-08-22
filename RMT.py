@@ -7,9 +7,9 @@ from scipy.stats import wasserstein_distance
 # Definition of the Marchenko-Pastur density
 def marchenko_pastur_pdf(x, Q, sigma=1):
     y = 1 / Q
-    lamda_plus = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)  # Largest eigenvalue
-    lamda_minus = np.power(sigma * (1 - np.sqrt(1 / Q)), 2)  # Smallest eigenvalue
-    return (1 / (2 * np.pi * sigma**2 * x * y)) * np.sqrt((lamda_plus - x) * (x - lamda_minus)) * (0 if (x > lamda_plus or x < lamda_minus) else 1)
+    b = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)  # Largest eigenvalue
+    a = np.power(sigma * (1 - np.sqrt(1 / Q)), 2)  # Smallest eigenvalue
+    return (1 / (2 * np.pi * sigma * sigma * x * y)) * np.sqrt((b - x) * (x - a)) * (0 if (x > b or x < a) else 1)
 
 def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
     # Eigendecomposition for Hermitian matrix
@@ -26,13 +26,13 @@ def eigenvalue_distribution_distance(correlation_matrix, Q, sigma=1, bins=30):
     x_max = np.power(sigma * (1 + np.sqrt(1 / Q)), 2)
     x = np.linspace(x_min, x_max, 5000)
 
-    return wasserstein_distance(u_values=e, v_values=x, v_weights=f(x))
+    return wasserstein_distance(u_values=e, v_values=x, v_weights=f(x)), f(x), e
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_only.csv", index_col='Date')
 prices.dropna(axis='columns', inplace=True)
 equity_returns = np.log(prices).diff()[1:]
-smoothing_rate_global = 120
+smoothing_rate_global = 5000
 
 # Automatically  rename sector labels
 sectors_labels = ["Health Care", "Industrials", "Communication Services", "Information Technology", "Utilities", "Financials",
@@ -45,7 +45,7 @@ equity_returns.columns = equity_returns.columns.str.replace('(\.\d+)$','')
 # Loop over sectors and generate rolling correlation matrix a
 sector_trajectories = []
 for i in range(len(sectors_labels)): # len(sector_labels)
-    sector_slice = equity_returns[sectors_labels[i]]
+    sector_slice = equity_returns #[sectors_labels[i]]
     theoretical_empirical_dist = []
 
     # Smoothing rate
@@ -59,7 +59,11 @@ for i in range(len(sectors_labels)): # len(sector_labels)
         Q = T / N
 
         # Compute distance between theoretical and empirical distribution
-        dist = eigenvalue_distribution_distance(correlation, Q, sigma=1)
+        dist, f_x, e = eigenvalue_distribution_distance(correlation, Q, sigma=1)
+
+        plt.hist(f_x, density=True, bins=30)
+        plt.hist(e, density = True, bins=30)
+        plt.show()
 
         # Append to list
         theoretical_empirical_dist.append(dist)

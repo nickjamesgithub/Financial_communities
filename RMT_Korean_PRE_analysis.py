@@ -16,6 +16,9 @@ sectors_labels = ["#N/A", "Health Care", "Industrials", "Communication Services"
 sectors_labels.sort()
 
 # Replace column names for prices and returns
+prices = prices.reindex(sorted(prices.columns), axis=1)
+prices_df = pd.DataFrame(prices)
+prices_df.to_csv("/Users/tassjames/Desktop/prices_ordered.csv")
 equity_returns = equity_returns.reindex(sorted(equity_returns.columns), axis=1)
 
 # Eigendecomposition
