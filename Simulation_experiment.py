@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 # Choose number of sectors and n for simulation
 num_sectors = 10
-n = 50
+n = 100
 sample_per_sector = n//num_sectors
 
 # Import data
@@ -65,6 +65,11 @@ while len(first_eigenvalue_samples) < 5:
         returns = log_returns.iloc[i - smoothing_rate:i, :]
         # Compute with pandas
         correlation = np.nan_to_num(returns.corr())
+        corr_diag = correlation - np.identity(len(correlation))
+
+        plt.matshow(corr_diag)
+        plt.colorbar()
+        plt.show()
 
         # Compute PCA
         pca_corr = PCA(n_components=10)
