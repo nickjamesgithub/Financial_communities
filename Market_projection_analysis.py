@@ -29,12 +29,10 @@ for i in range(smoothing_rate, len(market_returns)): # len(market_returns)
     # Inner product with ones
     one_vector = np.ones(len(market_correlation))/np.sqrt(len(market_correlation))
     norm_inner_product_ones = np.dot(m_vecs, one_vector)
-    norm_inner_product = np.dot(m_vecs, np.ones(len(market_correlation)))\
-                            /(np.linalg.norm(m_vecs) * np.linalg.norm(np.ones(len(market_correlation))))
     norm_1 = np.linalg.norm(m_vecs)
     norm_2 = np.linalg.norm(one_vector)
     # norm_inner_product_ones = np.abs(np.dot(s_vecs, one_vector)/(np.linalg.norm(s_vecs) * np.linalg.norm(one_vector))) # Inner product
-    inner_product_ones.append(norm_inner_product) # Norm Inner product between (111...1) and first eigenvector of sector
+    inner_product_ones.append(norm_inner_product_ones) # Norm Inner product between (111...1) and first eigenvector of sector
 
     print(" Simulation " + str(i))
 
