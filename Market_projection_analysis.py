@@ -21,7 +21,13 @@ for i in range(smoothing_rate, len(market_returns)): # len(market_returns)
     # Take market correlation matrix
     market_returns_slice = market_returns.iloc[(i - smoothing_rate):i, :]
     market_correlation = np.nan_to_num(market_returns_slice.corr())  # Compute correlation matrix
-    m_vals, m_vecs = eigsh(market_correlation, k=6, which='LM')
+    m_vals, m_vecs = eigsh(market_correlation, k=len(market_correlation), which='LM')
+    list = []
+    m_vals_e = np.reshape((m_vals)[-1], (1,1))
+    m_vecs_e = np.reshape((m_vecs)[:,-1], (len(market_correlation),1))
+    Av = np.dot(market_correlation, m_vecs_e)
+    lamdaV = np.dot(m_vecs_e, m_vals_e)
+    error = max(max(abs(Av - lamdaV)))
     m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
     m_vals_1 = m_vals[-1]/len(market_correlation)
     corr_1.append(m_vals_1)
