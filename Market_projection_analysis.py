@@ -27,7 +27,7 @@ for i in range(smoothing_rate, len(market_returns)): # len(market_returns)
     corr_1.append(m_vals_1)
 
     # Inner product with ones
-    one_vector = np.ones(len(market_correlation))/np.sqrt(len(market_correlation))
+    one_vector = np.ones(len(market_correlation))/len(market_correlation)
     norm_inner_product_ones = np.dot(m_vecs, one_vector)
     norm_1 = np.linalg.norm(m_vecs)
     norm_2 = np.linalg.norm(one_vector)
@@ -45,7 +45,7 @@ plt.show()
 # Inner product ones
 plt.plot(np.abs(inner_product_ones))
 plt.title("Market and Ones IP")
-plt.savefig("G_Market_IP")
+plt.savefig("G_Market_IP_N")
 plt.show()
 
 

@@ -4,6 +4,7 @@ from scipy.stats import multinomial
 import random
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from scipy.sparse.linalg import eigsh
 
 # Choose number of sectors and n for simulation
 num_sectors = 10
@@ -24,7 +25,7 @@ sectors_labels.sort()
 
 first_eigenvalue_samples = []
 portfolio_returns_sample = []
-while len(first_eigenvalue_samples) < 5:
+while len(first_eigenvalue_samples) < 2:
     # First pick n sectors at random
     sector_sequence = list(np.linspace(0,len(sectors_labels)-1,len(sectors_labels))) # Randomly draw sector numbers
     random_list_sector = random.sample(sector_sequence, num_sectors)
@@ -65,16 +66,12 @@ while len(first_eigenvalue_samples) < 5:
         returns = log_returns.iloc[i - smoothing_rate:i, :]
         # Compute with pandas
         correlation = np.nan_to_num(returns.corr())
-        corr_diag = correlation - np.identity(len(correlation))
 
-        plt.matshow(corr_diag)
-        plt.colorbar()
-        plt.show()
-
-        # Compute PCA
-        pca_corr = PCA(n_components=10)
-        pca_corr.fit(correlation)
-        corr_1.append(pca_corr.explained_variance_ratio_[0])
+        # Perform eigendecomposition and get explanatory variance
+        m_vals, m_vecs = eigsh(correlation, k=6, which='LM')
+        m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
+        m_vals_1 = m_vals[-1] / len(correlation)
+        corr_1.append(m_vals_1)
         print("Iteration "+str(i)+" / "+str(len(log_returns)))
 
         # Compute total returns
