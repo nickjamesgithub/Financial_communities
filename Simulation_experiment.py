@@ -7,9 +7,11 @@ from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
 # Choose number of sectors and n for simulation
-num_sectors = 10
-n = 100
-sample_per_sector = n//num_sectors
+sample_per_sector = 5
+num_sectors = 2
+n = sample_per_sector * num_sectors
+
+num_simulations = 100
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_sectors.csv", index_col='Date')
@@ -25,7 +27,7 @@ sectors_labels.sort()
 
 first_eigenvalue_samples = []
 portfolio_returns_sample = []
-while len(first_eigenvalue_samples) < 2:
+while len(first_eigenvalue_samples) < num_simulations:
     # First pick n sectors at random
     sector_sequence = list(np.linspace(0,len(sectors_labels)-1,len(sectors_labels))) # Randomly draw sector numbers
     random_list_sector = random.sample(sector_sequence, num_sectors)
@@ -84,28 +86,49 @@ while len(first_eigenvalue_samples) < 2:
     first_eigenvalue_samples.append(corr_1)
     portfolio_returns_sample.append(returns_list)
 
-# Plot first 5 samples
-avg_explanatory_variance = [] # Average explanatory variance from first eigenvalue
-for i in range(len(first_eigenvalue_samples)):
-    plt.plot(first_eigenvalue_samples[i])
-    avg_explanatory_variance.append(np.mean(first_eigenvalue_samples[i]))
-plt.title("First eigenvalue samples")
+
+# Generate average \lambda_1(t) sample path and confidence intervals
+first_eigenvalue_array = np.array(first_eigenvalue_samples)
+eigenvalue_sample_90 = np.percentile(first_eigenvalue_array, 90, axis=0)
+eigenvalue_sample_50 = np.percentile(first_eigenvalue_array, 50, axis=0)
+eigenvalue_sample_5 = np.percentile(first_eigenvalue_array, 5, axis=0)
+
+# Plot eigenvalue samples at 5th, 50th and 95th percentile
+plt.plot(eigenvalue_sample_50)
+plt.plot(eigenvalue_sample_5)
+plt.plot(eigenvalue_sample_90)
 plt.show()
 
-# Plot distribution of first eigenvalue
-plt.hist(avg_explanatory_variance)
-plt.title("First eigenvalue average contribution")
-plt.show()
-
-# Plot 5 return paths
+# Portfolio return samples
+portfolio_volatilities = []
 for i in range(len(portfolio_returns_sample)):
-    plt.plot(portfolio_returns_sample[i], alpha=0.1)
-plt.title("Portfolio return samples")
-plt.show()
+    volatility = np.std(portfolio_returns_sample[i]) * np.sqrt(250)
+    portfolio_volatilities.append(volatility)
 
-# Compute Expected Return
-portfolio_returns_sample_array = np.array(portfolio_returns_sample)
-returns_expectation = portfolio_returns_sample_array.mean(axis=0)
-volatility_expectation = np.std(returns_expectation) * np.sqrt(250)
-print(returns_expectation)
-print(volatility_expectation)
+print(portfolio_volatilities)
+
+# Plot first 5 samples
+# avg_explanatory_variance = [] # Average explanatory variance from first eigenvalue
+# for i in range(len(first_eigenvalue_samples)):
+#     plt.plot(first_eigenvalue_samples[i])
+#     avg_explanatory_variance.append(np.mean(first_eigenvalue_samples[i]))
+# plt.title("First eigenvalue samples")
+# plt.show()
+
+# # Plot distribution of first eigenvalue
+# plt.hist(avg_explanatory_variance)
+# plt.title("First eigenvalue average contribution")
+# plt.show()
+#
+# # Plot 5 return paths
+# for i in range(len(portfolio_returns_sample)):
+#     plt.plot(portfolio_returns_sample[i], alpha=0.1)
+# plt.title("Portfolio return samples")
+# plt.show()
+#
+# # Compute Expected Return
+# portfolio_returns_sample_array = np.array(portfolio_returns_sample)
+# returns_expectation = portfolio_returns_sample_array.mean(axis=0)
+# volatility_expectation = np.std(returns_expectation) * np.sqrt(250)
+# print(returns_expectation)
+# print(volatility_expectation)
