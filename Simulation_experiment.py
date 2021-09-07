@@ -7,11 +7,11 @@ from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
 # Choose number of sectors and n for simulation
-sample_per_sector = 5
-num_sectors = 2
+sample_per_sector = 6
+num_sectors = 3
 n = sample_per_sector * num_sectors
 
-num_simulations = 100
+num_simulations = 5
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_sectors.csv", index_col='Date')
@@ -44,6 +44,7 @@ while len(first_eigenvalue_samples) < num_simulations:
 
     # Get the random samples for current iteration
     stock_samples = []
+    names = []
     for i in range(len(random_sector_list)):
         sector_slice = prices[random_sector_list[i]]
         length = len(sector_slice.columns)
@@ -54,6 +55,7 @@ while len(first_eigenvalue_samples) < num_simulations:
         for j in range(len(random_sector_stocks.iloc[0])):
             stock_slice = random_sector_stocks.iloc[:, j]
             stock_slice_list = list((stock_slice[1:]).astype("float"))
+            names.append(stock_slice[0])
             stock_samples.append(stock_slice_list)
 
     # Convert back into a dataframe
@@ -86,17 +88,17 @@ while len(first_eigenvalue_samples) < num_simulations:
     first_eigenvalue_samples.append(corr_1)
     portfolio_returns_sample.append(returns_list)
 
-
 # Generate average \lambda_1(t) sample path and confidence intervals
 first_eigenvalue_array = np.array(first_eigenvalue_samples)
-eigenvalue_sample_90 = np.percentile(first_eigenvalue_array, 90, axis=0)
-eigenvalue_sample_50 = np.percentile(first_eigenvalue_array, 50, axis=0)
-eigenvalue_sample_5 = np.percentile(first_eigenvalue_array, 5, axis=0)
+lambda_sample_90 = np.percentile(first_eigenvalue_array, 95, axis=0)
+lambda_sample_50 = np.percentile(first_eigenvalue_array, 50, axis=0)
+lambda_sample_5 = np.percentile(first_eigenvalue_array, 5, axis=0)
+lambda_paths = [lambda_sample_5, lambda_sample_50, lambda_sample_90]
 
 # Plot eigenvalue samples at 5th, 50th and 95th percentile
-plt.plot(eigenvalue_sample_50)
-plt.plot(eigenvalue_sample_5)
-plt.plot(eigenvalue_sample_90)
+plt.plot(lambda_sample_5, label="5th percentile")
+plt.plot(lambda_sample_50, label="50th percentile")
+plt.plot(lambda_sample_90, label="95th percentile")
 plt.show()
 
 # Portfolio return samples
@@ -104,31 +106,10 @@ portfolio_volatilities = []
 for i in range(len(portfolio_returns_sample)):
     volatility = np.std(portfolio_returns_sample[i]) * np.sqrt(250)
     portfolio_volatilities.append(volatility)
-
 print(portfolio_volatilities)
 
-# Plot first 5 samples
-# avg_explanatory_variance = [] # Average explanatory variance from first eigenvalue
-# for i in range(len(first_eigenvalue_samples)):
-#     plt.plot(first_eigenvalue_samples[i])
-#     avg_explanatory_variance.append(np.mean(first_eigenvalue_samples[i]))
-# plt.title("First eigenvalue samples")
-# plt.show()
-
-# # Plot distribution of first eigenvalue
-# plt.hist(avg_explanatory_variance)
-# plt.title("First eigenvalue average contribution")
-# plt.show()
-#
-# # Plot 5 return paths
-# for i in range(len(portfolio_returns_sample)):
-#     plt.plot(portfolio_returns_sample[i], alpha=0.1)
-# plt.title("Portfolio return samples")
-# plt.show()
-#
-# # Compute Expected Return
-# portfolio_returns_sample_array = np.array(portfolio_returns_sample)
-# returns_expectation = portfolio_returns_sample_array.mean(axis=0)
-# volatility_expectation = np.std(returns_expectation) * np.sqrt(250)
-# print(returns_expectation)
-# print(volatility_expectation)
+# Convert to dataframes and write to csv
+portfolio_volatilities_df = pd.DataFrame(portfolio_volatilities)
+portfolio_volatilities_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/volatilities"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
+lambda_paths_df = pd.DataFrame(lambda_paths)
+lambda_paths_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/lambda_paths"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
