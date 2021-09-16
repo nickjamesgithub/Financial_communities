@@ -7,109 +7,116 @@ from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
 # Choose number of sectors and n for simulation
-sample_per_sector = 6
-num_sectors = 3
-n = sample_per_sector * num_sectors
+sectors_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
+samples_list = [2,3,4,5,6,7,8] # 2,3,4,5,6,7,8
+for k in range(len(sectors_list)):
+    for s in range(len(samples_list)):
+        num_sectors = sectors_list[k]
+        sample_per_sector = samples_list[s]
 
-num_simulations = 5
+        # n is samples per sector * number of sectors
+        n = sample_per_sector * num_sectors
 
-# Import data
-prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_sectors.csv", index_col='Date')
+        num_simulations = 500 # 500
 
-# Replace column names for prices
-prices = prices.reindex(sorted(prices.columns), axis=1)
-prices.columns = prices.columns.str.replace('(\.\d+)$','')
+        # Import data
+        prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_sectors.csv", index_col='Date')
 
-sectors_labels = ["Health Care", "Industrials", "Information Technology", "Utilities", "Financials",
-           "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary", "Energy", "Communication Services"]
+        # Replace column names for prices
+        prices = prices.reindex(sorted(prices.columns), axis=1)
+        prices.columns = prices.columns.str.replace('(\.\d+)$','')
 
-sectors_labels.sort()
+        sectors_labels = ["Health Care", "Industrials", "Information Technology", "Utilities", "Financials",
+                   "Materials", "Real Estate", "Consumer Staples", "Consumer Discretionary", "Energy", "Communication Services"]
 
-first_eigenvalue_samples = []
-portfolio_returns_sample = []
-while len(first_eigenvalue_samples) < num_simulations:
-    # First pick n sectors at random
-    sector_sequence = list(np.linspace(0,len(sectors_labels)-1,len(sectors_labels))) # Randomly draw sector numbers
-    random_list_sector = random.sample(sector_sequence, num_sectors)
-    ints = [int(item) for item in random_list_sector]
+        sectors_labels.sort()
 
-    # Get corresponding sector names
-    random_sector_list = []
-    for i in range(len(ints)):
-        random_sector_drawn = sectors_labels[ints[i]]
-        random_sector_list.append(random_sector_drawn)
+        first_eigenvalue_samples = []
+        portfolio_returns_sample = []
+        while len(first_eigenvalue_samples) < num_simulations:
+            # First pick n sectors at random
+            sector_sequence = list(np.linspace(0,len(sectors_labels)-1,len(sectors_labels))) # Randomly draw sector numbers
+            random_list_sector = random.sample(sector_sequence, num_sectors)
+            ints = [int(item) for item in random_list_sector]
 
-    # Print random sector list
-    print(random_sector_list)
+            # Get corresponding sector names
+            random_sector_list = []
+            for i in range(len(ints)):
+                random_sector_drawn = sectors_labels[ints[i]]
+                random_sector_list.append(random_sector_drawn)
 
-    # Get the random samples for current iteration
-    stock_samples = []
-    names = []
-    for i in range(len(random_sector_list)):
-        sector_slice = prices[random_sector_list[i]]
-        length = len(sector_slice.columns)
-        random_sequence = list(np.linspace(0, length - 1, length))
-        random_list_stocks = random.sample(random_sequence, sample_per_sector)
-        ints = [int(item) for item in random_list_stocks]
-        random_sector_stocks = sector_slice.iloc[:, ints]
-        for j in range(len(random_sector_stocks.iloc[0])):
-            stock_slice = random_sector_stocks.iloc[:, j]
-            stock_slice_list = list((stock_slice[1:]).astype("float"))
-            names.append(stock_slice[0])
-            stock_samples.append(stock_slice_list)
+            # Print random sector list
+            print(random_sector_list)
 
-    # Convert back into a dataframe
-    stock_samples_df = pd.DataFrame(np.transpose(stock_samples))
-    log_returns = np.log(stock_samples_df).diff()[1:]
-    smoothing_rate = 120
+            # Get the random samples for current iteration
+            stock_samples = []
+            names = []
+            for i in range(len(random_sector_list)):
+                sector_slice = prices[random_sector_list[i]]
+                length = len(sector_slice.columns)
+                random_sequence = list(np.linspace(0, length - 1, length))
+                random_list_stocks = random.sample(random_sequence, sample_per_sector)
+                ints = [int(item) for item in random_list_stocks]
+                random_sector_stocks = sector_slice.iloc[:, ints]
+                for j in range(len(random_sector_stocks.iloc[0])):
+                    stock_slice = random_sector_stocks.iloc[:, j]
+                    stock_slice_list = list((stock_slice[1:]).astype("float"))
+                    names.append(stock_slice[0])
+                    stock_samples.append(stock_slice_list)
 
-    returns_list = []
-    corr_1 = []
-    for i in range(smoothing_rate, len(log_returns)):
-        # Returns
-        returns = log_returns.iloc[i - smoothing_rate:i, :]
-        # Compute with pandas
-        correlation = np.nan_to_num(returns.corr())
+            # Convert back into a dataframe
+            stock_samples_df = pd.DataFrame(np.transpose(stock_samples))
+            log_returns = np.log(stock_samples_df).diff()[1:]
+            smoothing_rate = 120
 
-        # Perform eigendecomposition and get explanatory variance
-        m_vals, m_vecs = eigsh(correlation, k=6, which='LM')
-        m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
-        m_vals_1 = m_vals[-1] / len(correlation)
-        corr_1.append(m_vals_1)
-        print("Iteration "+str(i)+" / "+str(len(log_returns)))
+            returns_list = []
+            corr_1 = []
+            for i in range(smoothing_rate, len(log_returns)):
+                # Returns
+                returns = log_returns.iloc[i - smoothing_rate:i, :]
+                # Compute with pandas
+                correlation = np.nan_to_num(returns.corr())
 
-        # Compute total returns
-        returns_1 = np.array(log_returns.iloc[i, :])
-        weights = np.repeat(1/len(returns_1), n)
-        total_return_iteration = np.sum(returns_1 * weights)
-        returns_list.append(total_return_iteration)
+                # Perform eigendecomposition and get explanatory variance
+                m_vals, m_vecs = eigsh(correlation, k=6, which='LM')
+                m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
+                m_vals_1 = m_vals[-1] / len(correlation)
+                corr_1.append(m_vals_1)
+                print("Iteration "+str(i)+" / "+str(len(log_returns)))
 
-    # Append draws of first eigenvalue samples to main list
-    first_eigenvalue_samples.append(corr_1)
-    portfolio_returns_sample.append(returns_list)
+                # Compute total returns
+                returns_1 = np.array(log_returns.iloc[i, :])
+                weights = np.repeat(1/len(returns_1), n)
+                total_return_iteration = np.sum(returns_1 * weights)
+                returns_list.append(total_return_iteration)
 
-# Generate average \lambda_1(t) sample path and confidence intervals
-first_eigenvalue_array = np.array(first_eigenvalue_samples)
-lambda_sample_90 = np.percentile(first_eigenvalue_array, 95, axis=0)
-lambda_sample_50 = np.percentile(first_eigenvalue_array, 50, axis=0)
-lambda_sample_5 = np.percentile(first_eigenvalue_array, 5, axis=0)
-lambda_paths = [lambda_sample_5, lambda_sample_50, lambda_sample_90]
+            # Append draws of first eigenvalue samples to main list
+            first_eigenvalue_samples.append(corr_1)
+            portfolio_returns_sample.append(returns_list)
+            print("Simulation " + str(len(first_eigenvalue_samples)) + " / " + str(num_simulations))
 
-# Plot eigenvalue samples at 5th, 50th and 95th percentile
-plt.plot(lambda_sample_5, label="5th percentile")
-plt.plot(lambda_sample_50, label="50th percentile")
-plt.plot(lambda_sample_90, label="95th percentile")
-plt.show()
+        # Generate average \lambda_1(t) sample path and confidence intervals
+        first_eigenvalue_array = np.array(first_eigenvalue_samples)
+        lambda_sample_90 = np.percentile(first_eigenvalue_array, 95, axis=0)
+        lambda_sample_50 = np.percentile(first_eigenvalue_array, 50, axis=0)
+        lambda_sample_5 = np.percentile(first_eigenvalue_array, 5, axis=0)
+        lambda_paths = [lambda_sample_5, lambda_sample_50, lambda_sample_90]
 
-# Portfolio return samples
-portfolio_volatilities = []
-for i in range(len(portfolio_returns_sample)):
-    volatility = np.std(portfolio_returns_sample[i]) * np.sqrt(250)
-    portfolio_volatilities.append(volatility)
-print(portfolio_volatilities)
+        # Plot eigenvalue samples at 5th, 50th and 95th percentile
+        plt.plot(lambda_sample_5, label="5th percentile")
+        plt.plot(lambda_sample_50, label="50th percentile")
+        plt.plot(lambda_sample_90, label="95th percentile")
+        plt.show()
 
-# Convert to dataframes and write to csv
-portfolio_volatilities_df = pd.DataFrame(portfolio_volatilities)
-portfolio_volatilities_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/volatilities"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
-lambda_paths_df = pd.DataFrame(lambda_paths)
-lambda_paths_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/lambda_paths"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
+        # Portfolio return samples
+        portfolio_volatilities = []
+        for i in range(len(portfolio_returns_sample)):
+            volatility = np.std(portfolio_returns_sample[i]) * np.sqrt(250)
+            portfolio_volatilities.append(volatility)
+        print(portfolio_volatilities)
+
+        # Convert to dataframes and write to csv
+        portfolio_volatilities_df = pd.DataFrame(portfolio_volatilities)
+        portfolio_volatilities_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/volatilities"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
+        lambda_paths_df = pd.DataFrame(lambda_paths)
+        lambda_paths_df.to_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/lambda_paths"+"_"+str(num_sectors)+'_'+str(sample_per_sector)+".csv")
