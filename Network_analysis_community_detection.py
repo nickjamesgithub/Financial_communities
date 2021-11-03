@@ -1,35 +1,17 @@
-import sys
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import numpy as np
 import numpy.linalg as la
 import scipy as sp
 import pandas as pd
-import csv
-import pickle
-import xlrd
 # Ignore warnings
-import openpyxl
 import warnings
 warnings.filterwarnings('ignore')
 # networkx
 import networkx as nx
-from networkx.algorithms import community
-from networkx.algorithms.community import greedy_modularity_communities
-from networkx.algorithms.community import k_clique_communities
 # from community import community_louvain
-import community_louvain
 import scipy.sparse.linalg
-import sklearn
-from sklearn.cluster import KMeans
-import sklearn.preprocessing
-from sklearn.decomposition import PCA
-import itertools
-from itertools import chain
-from Network_helper_functions import Spectral_clustering
 
 # graph-tools
-from graph_tool.all import *
 #
 # # plotting setting
 # SMALL_SIZE = 12
