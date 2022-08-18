@@ -7,10 +7,11 @@ from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
 # Choose number of sectors and n for simulation
-sectors_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
-samples_list = [2,3,4,5,6,7,8] # 2,3,4,5,6,7,8
+sectors_list = [10] # 2,3,4,5,6,7,8,9
+samples_list = [9] # 2,3,4,5,6,7,8,9
 for k in range(len(sectors_list)):
     for s in range(len(samples_list)):
+
         num_sectors = sectors_list[k]
         sample_per_sector = samples_list[s]
 
@@ -82,6 +83,7 @@ for k in range(len(sectors_list)):
                 m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
                 m_vals_1 = m_vals[-1] / len(correlation)
                 corr_1.append(m_vals_1)
+                print("Sectors ", sectors_list[k], " Samples", samples_list[s])
                 print("Iteration "+str(i)+" / "+str(len(log_returns)))
 
                 # Compute total returns

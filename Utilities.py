@@ -183,11 +183,11 @@ def changepoint_probabilities(df):
 def dendrogram_plot_test(matrix, distance_measure, data_generation, labels):
 
     # Compute and plot dendrogram.
-    plt.rcParams.update({'font.size': 8})
+    plt.rcParams.update({'font.size': 16})
     fig = pylab.figure(figsize=(15,10))
     axdendro = fig.add_axes([0.09,0.1,0.2,0.8])
     Y = sch.linkage(matrix, method='centroid')
-    Z = sch.dendrogram(Y, orientation='right', labels=labels, leaf_rotation=360, leaf_font_size=8)
+    Z = sch.dendrogram(Y, orientation='right', labels=labels, leaf_rotation=360, leaf_font_size=10)
     axdendro.set_xticks([])
     # axdendro.set_yticks([])
 
@@ -202,6 +202,7 @@ def dendrogram_plot_test(matrix, distance_measure, data_generation, labels):
 
     # Plot colorbar.
     axcolor = fig.add_axes([0.91,0.1,0.02,0.8])
+    axcolor.tick_params(labelsize=16)
     pylab.colorbar(im, cax=axcolor)
     # plt.title(data_generation+distance_measure+"Dendrogram")
     plt.savefig(data_generation+distance_measure+"Dendrogram")

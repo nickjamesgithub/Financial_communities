@@ -4,7 +4,8 @@ from Utilities import dendrogram_plot, dendrogram_plot_test
 import pandas as pd
 import glob
 
-market_list = ["all", "gfc", "gfc_crash", "interim", "covid", "covid_crash"]
+market_list = ["all"]
+
 for i in range(len(market_list)):
     market_period_i = market_list[i]
     market_period = market_period_i # all, gfc, gfc_crash, interim, covid, covid_crash
@@ -20,7 +21,7 @@ for i in range(len(market_list)):
               "6,2","6,3","6,4","6,5","6,6","6,7","6,8","6,9",
               "7,2","7,3","7,4","7,5","7,6","7,7","7,8","7,9",
               "8,2","8,3","8,4","8,5","8,6","8,7","8,8","8,9",
-              "9,2","9,3","9,4","9,5","9,6","9,7","9,8","9,9"]
+              "9,2","9,3","9,4","9,5","9,6","9,7","9,8","9,9"] # Try 10 at the top
 
     # Read in data
     path = '/Users/tassjames/Desktop/Diffusion_maps_financial/sampling_results/lambda_1' # use your path
@@ -41,7 +42,8 @@ for i in range(len(market_list)):
                 lamda_1_i = lamda_1_list[i]
                 lamda_1_j = lamda_1_list[j]
                 # Compute L1 distance between vectors
-                dist = np.sum(np.abs(lamda_1_i - lamda_1_j))/len(lamda_1_i)
+                # dist = np.sum(np.abs(lamda_1_i - lamda_1_j))/len(lamda_1_i)
+                dist = np.sum(np.abs(lamda_1_i - lamda_1_j))
                 distance_matrix[i,j] = dist
 
             if market_period == "gfc":
@@ -81,5 +83,5 @@ for i in range(len(market_list)):
         print("Iteration", i)
 
     # Dendrogram plot labels
-    dendrogram_plot_test(distance_matrix, "_L1_", "lambda_1_"+market_period_i, labels)
+    dendrogram_plot_test(distance_matrix, "_L1_", "lambda_1_L1"+market_period_i, labels)
     print(np.linalg.norm(distance_matrix))

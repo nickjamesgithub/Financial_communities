@@ -11,6 +11,11 @@ prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_cl
 prices = prices.reindex(sorted(prices.columns), axis=1)
 prices.columns = prices.columns.str.replace('(\.\d+)$','')
 
+# Get Sectors in table
+table_slice = prices.iloc[0:1,8:].transpose()
+print(table_slice.to_latex(index=True))
+block = 1
+
 # Sort the sectors
 sectors_labels = ["Materials", "Health Care", "Industrials", "Information Technology", "Utilities", "Financials",
             "Real Estate", "Consumer Staples", "Consumer Discretionary", "Energy", "Communication Services"]
