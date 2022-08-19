@@ -6,15 +6,34 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
-# Choose number of sectors and n for simulation
-num_simulations = 1  # 500
-global_paths = []
-# Store portfolio grid values in sample
+crisis = "dot_com" # dot_com, gfc, covid, ukraine
 
+# Import data
+prices = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/Jacob_data_sectors_clean.csv", index_col='Date')
+
+if crisis == "dot_com":
+    prices = prices.iloc[146:794,:]
+
+if crisis == "gfc":
+    prices = prices.iloc[1865:2703,:]
+
+if crisis == "covid":
+    prices = prices.iloc[5184:5304,:]
+
+if crisis == "ukraine":
+    prices = prices.iloc[5642:5733,:]
+
+# Choose number of sectors and n for simulation
+num_simulations = 500
+global_paths = []
+xs_path = []
+ys_path = []
+
+# Store portfolio grid values in sample
 while len(global_paths) < num_simulations:
     portfolio_grid_samples = []
-    sectors_list = [2,3,4,5] # 2,3,4,5,6,7,8,9
-    samples_list = [2,3,4,5] # 2,3,4,5,6,7,8,9
+    sectors_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
+    samples_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
     for k in range(len(sectors_list)):
         for s in range(len(samples_list)):
 
@@ -23,9 +42,6 @@ while len(global_paths) < num_simulations:
 
             # n is samples per sector * number of sectors
             n = sample_per_sector * num_sectors
-
-            # Import data
-            prices = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/Jacob_data_sectors_clean.csv", index_col='Date')
 
             # Replace column names for prices
             prices = prices.reindex(sorted(prices.columns), axis=1)
@@ -67,7 +83,7 @@ while len(global_paths) < num_simulations:
             # Convert back into a dataframe
             stock_samples_df = pd.DataFrame(np.transpose(stock_samples))
             log_returns = np.log(stock_samples_df).diff()[1:]
-            smoothing_rate = 4500 # set to 120
+            smoothing_rate = 90 # set to 90
 
             returns_list = []
             corr_1 = []
@@ -101,21 +117,45 @@ while len(global_paths) < num_simulations:
 
     def matrix_path_function(array):
         steps_list = []
+        x_list = []
+        y_list = []
         down_counter = 0
         right_counter = 0
+        x_counter = 0
+        y_counter = 0
         while len(steps_list) < 2 * len(array):
             if down_counter + 1 >= len(array) or right_counter + 1 >= len(array):
                 print(steps_list)
-                return steps_list
+                return x_list, y_list, steps_list
             else:
                 if array[down_counter,right_counter+1] < array[down_counter+1,right_counter]:
                     move = "right"
                     steps_list.append(move)
+                    x_list.append(x_counter)
                     right_counter += 1
+                    x_counter += 1
+                    y_list.append(y_counter)
                 else:
                     move = "down"
                     steps_list.append(move)
+                    x_list.append(x_counter)
                     down_counter += 1
+                    x_counter += 1
+                    y_counter -= 1
+                    y_list.append(y_counter)
 
-    path = matrix_path_function(portfolio_grid_reshaped)
-    block = 1
+    # Append xs, ys, full path
+    xs, ys, path = matrix_path_function(portfolio_grid_reshaped)
+    xs_path.append(xs)
+    ys_path.append(ys)
+    global_paths.append(path)
+
+# Convert all to dataframes
+global_paths_df = pd.DataFrame(global_paths)
+xs_df = pd.DataFrame(xs_path)
+ys_df = pd.DataFrame(ys_path)
+
+# Write to csv file
+global_paths_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/global_paths_jacob_"+crisis+".csv")
+xs_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/xs_df_"+crisis+".csv")
+ys_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/ys_df_"+crisis+".csv")
