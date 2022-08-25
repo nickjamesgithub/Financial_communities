@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
-crisis_list = ["dot_com", "gfc", "covid", "ukraine"]
+# crisis_list = ["dot_com", "gfc", "covid", "ukraine"]
+crisis_list = ["dot_com"]
 
 for c in range(len(crisis_list)):
     crisis = crisis_list[c] # dot_com, gfc, covid, ukraine
@@ -27,7 +28,7 @@ for c in range(len(crisis_list)):
         prices = prices.iloc[5642:5733,:]
 
     # Choose number of sectors and n for simulation
-    num_simulations = 250
+    num_simulations = 30
     global_paths = []
     xs_path = []
     ys_path = []
@@ -89,30 +90,36 @@ for c in range(len(crisis_list)):
                 smoothing_rate = 90 # set to 90
 
                 returns_list = []
-                corr_1 = []
-                for i in range(smoothing_rate, len(log_returns)):
-                    # Returns
-                    returns = log_returns.iloc[i - smoothing_rate:i, :]
-                    # Compute with pandas
-                    correlation = np.nan_to_num(returns.corr())
+                corr_global = []
+                while len(corr_global) < 10:
+                    corr_1 = []
+                    for i in range(smoothing_rate, len(log_returns)):
+                        # Returns
+                        returns = log_returns.iloc[i - smoothing_rate:i, :]
+                        # Compute with pandas
+                        correlation = np.nan_to_num(returns.corr())
 
-                    # Perform eigendecomposition and get explanatory variance
-                    m_vals, m_vecs = eigsh(correlation, k=6, which='LM')
-                    m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
-                    m_vals_1 = m_vals[-1] / len(correlation)
-                    corr_1.append(m_vals_1)
-                    print("Sectors ", sectors_list[k], " Samples", samples_list[s])
-                    print("Iteration "+str(i)+" / "+str(len(log_returns)))
+                        # Perform eigendecomposition and get explanatory variance
+                        m_vals, m_vecs = eigsh(correlation, k=6, which='LM')
+                        m_vecs = m_vecs[:, -1]  # Get 1st eigenvector
+                        m_vals_1 = m_vals[-1] / len(correlation)
+                        corr_1.append(m_vals_1)
+                        print("Sectors ", sectors_list[k], " Samples", samples_list[s])
+                        print("Iteration "+str(i)+" / "+str(len(log_returns)))
 
-                    # Compute total returns
-                    returns_1 = np.array(log_returns.iloc[i, :])
-                    weights = np.repeat(1/len(returns_1), n)
-                    total_return_iteration = np.sum(returns_1 * weights)
-                    returns_list.append(total_return_iteration)
+                        # Compute total returns
+                        returns_1 = np.array(log_returns.iloc[i, :])
+                        weights = np.repeat(1/len(returns_1), n)
+                        total_return_iteration = np.sum(returns_1 * weights)
+                        returns_list.append(total_return_iteration)
+                        print("Correlation run length", len(corr_global) + 1)
+
+                    # Append first eigenvalue path to global run
+                    corr_global.append(np.mean(corr_1))
 
                 # Compute average lambda_1(t) value over the time period
-                avg_corr_1 = np.mean(corr_1)
-                portfolio_grid_samples.append(avg_corr_1)
+                avg_corr_1_global = np.mean(corr_global)
+                portfolio_grid_samples.append(avg_corr_1_global)
 
         # Make portfolio grid an array
         portfolio_grid_samples_array = np.array(portfolio_grid_samples)
