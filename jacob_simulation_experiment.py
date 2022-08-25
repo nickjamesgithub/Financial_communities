@@ -28,7 +28,8 @@ for c in range(len(crisis_list)):
         prices = prices.iloc[5642:5733,:]
 
     # Choose number of sectors and n for simulation
-    num_simulations = 30
+    num_simulations = 1
+    grid_runs = 5
     global_paths = []
     xs_path = []
     ys_path = []
@@ -36,8 +37,8 @@ for c in range(len(crisis_list)):
     # Store portfolio grid values in sample
     while len(global_paths) < num_simulations:
         portfolio_grid_samples = []
-        sectors_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6
-        samples_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
+        sectors_list = [2,3,4,5,6] # 2,3,4,5,6
+        samples_list = [2,3,4,5,6] # 2,3,4,5,6,7,8,9
         for k in range(len(sectors_list)):
             for s in range(len(samples_list)):
 
@@ -91,7 +92,7 @@ for c in range(len(crisis_list)):
 
                 returns_list = []
                 corr_global = []
-                while len(corr_global) < 10:
+                while len(corr_global) < grid_runs:
                     corr_1 = []
                     for i in range(smoothing_rate, len(log_returns)):
                         # Returns
