@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from scipy.sparse.linalg import eigsh
 
-# crisis_list = ["dot_com", "gfc", "covid", "ukraine"]
-crisis_list = ["dot_com"]
+crisis_list = ["dot_com", "gfc", "covid", "ukraine"]
+# crisis_list = ["dot_com"]
 
 for c in range(len(crisis_list)):
     crisis = crisis_list[c] # dot_com, gfc, covid, ukraine
@@ -28,7 +28,7 @@ for c in range(len(crisis_list)):
         prices = prices.iloc[5642:5733,:]
 
     # Choose number of sectors and n for simulation
-    num_simulations = 1
+    num_simulations = 50
     grid_runs = 5
     global_paths = []
     xs_path = []
@@ -37,8 +37,8 @@ for c in range(len(crisis_list)):
     # Store portfolio grid values in sample
     while len(global_paths) < num_simulations:
         portfolio_grid_samples = []
-        sectors_list = [2,3,4,5,6] # 2,3,4,5,6
-        samples_list = [2,3,4,5,6] # 2,3,4,5,6,7,8,9
+        sectors_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6
+        samples_list = [2,3,4,5,6,7,8,9] # 2,3,4,5,6,7,8,9
         for k in range(len(sectors_list)):
             for s in range(len(samples_list)):
 
