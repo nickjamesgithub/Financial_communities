@@ -19,12 +19,53 @@ covid = prices.iloc[5184:5304, :]
 ukraine = prices.iloc[5642:5733, :]
 
 # Log returns of all economic periods
-dot_com_returns = np.log(dot_com).diff()[1:]
-gfc_returns = np.log(gfc).diff()[1:]
-covid_returns = np.log(covid).diff()[1:]
-ukraine_returns = np.log(ukraine).diff()[1:]
-x=1
-y=2
+dot_com_returns = 100 * np.log(dot_com).diff()[1:]
+gfc_returns = 100 * np.log(gfc).diff()[1:]
+covid_returns = 100 * np.log(covid).diff()[1:]
+ukraine_returns = 100 * np.log(ukraine).diff()[1:]
+
+# Flatten probability distributions
+dc_flattened = dot_com_returns.values.flatten()
+gfc_flattened = gfc_returns.values.flatten()
+covid_flattened = covid_returns.values.flatten()
+ukraine_flattened = ukraine_returns.values.flatten()
+
+# Store all the Flattened distributions in list
+flattened_distributions = [dc_flattened, gfc_flattened, covid_flattened, ukraine_flattened]
+# Initialise alpha and beta values
+alpha = np.linspace(-10, 10, 10)
+beta = np.linspace(1/4, 4, 10)
+
+# Optimise for alpha and beta parameter
+for i in range(len(flattened_distributions)):
+    for j in range(len(flattened_distributions)):
+        print("Distribution", i)
+        print("Distribution", j)
+        dist_i = flattened_distributions[i]
+        dist_j = flattened_distributions[j]
+        # Loop over alpha and beta
+        wasserstein_dist_list = []
+        for a in range(len(alpha)):
+            for b in range(len(beta)):
+                print("Alpha parameter", a)
+                print("Beta parameter", b)
+                # Transformed distribution i
+                dist_i_transformed = alpha[a] + beta[b] * dist_i
+                # Compute Wasserstein distance
+                wass_dist = wasserstein_distance(dist_i_transformed, dist_j)
+                wasserstein_dist_list.append([flattened_distributions[i], flattened_distributions[j], alpha[a], beta[b], wass_dist])
+
+        # Wasserstein array
+        wasserstein_distance_array = np.array(wasserstein_dist_list)
+        argmin_value = wasserstein_distance_array[:, 4].argmin()
+        optimal_params = wasserstein_distance_array[argmin_value]
+
+        x=1
+
+
+
+
+
 
 
 # Correlation matrix for each period
