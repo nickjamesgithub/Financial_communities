@@ -31,12 +31,14 @@ covid_flattened = covid_returns.values.flatten()
 ukraine_flattened = ukraine_returns.values.flatten()
 
 # Store all the Flattened distributions in list
+flattened_dist_names = ["Dot-Com", "GFC", "COVID", "Ukraine"]
 flattened_distributions = [dc_flattened, gfc_flattened, covid_flattened, ukraine_flattened]
 # Initialise alpha and beta values
-alpha = np.linspace(-10, 10, 10)
-beta = np.linspace(1/4, 4, 10)
+alpha = np.linspace(-10, 10, 50)
+beta = np.linspace(1/4, 4, 50)
 
 # Optimise for alpha and beta parameter
+optimal_parameter_list = []
 for i in range(len(flattened_distributions)):
     for j in range(len(flattened_distributions)):
         print("Distribution", i)
@@ -53,20 +55,21 @@ for i in range(len(flattened_distributions)):
                 dist_i_transformed = alpha[a] + beta[b] * dist_i
                 # Compute Wasserstein distance
                 wass_dist = wasserstein_distance(dist_i_transformed, dist_j)
-                wasserstein_dist_list.append([flattened_distributions[i], flattened_distributions[j], alpha[a], beta[b], wass_dist])
+                wasserstein_dist_list.append([flattened_dist_names[i], flattened_dist_names[j], alpha[a], beta[b], wass_dist])
 
         # Wasserstein array
         wasserstein_distance_array = np.array(wasserstein_dist_list)
         argmin_value = wasserstein_distance_array[:, 4].argmin()
         optimal_params = wasserstein_distance_array[argmin_value]
+        # Append to optimal parameter list
+        optimal_parameter_list.append(optimal_params)
 
-        x=1
+# Write to csv file
+optimal_parameter_df = pd.DataFrame(optimal_parameter_list)
+optimal_parameter_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/optimal_params.csv")
 
-
-
-
-
-
+x=1
+y=2
 
 # Correlation matrix for each period
 dot_com_correlation = dot_com_returns.corr()
