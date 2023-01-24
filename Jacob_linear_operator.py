@@ -68,8 +68,6 @@ for i in range(len(flattened_distributions)):
 optimal_parameter_df = pd.DataFrame(optimal_parameter_list)
 optimal_parameter_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/optimal_params.csv")
 
-x=1
-y=2
 
 # Correlation matrix for each period
 dot_com_correlation = dot_com_returns.corr()
