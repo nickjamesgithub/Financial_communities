@@ -34,8 +34,8 @@ ukraine_flattened = ukraine_returns.values.flatten()
 flattened_dist_names = ["Dot-Com", "GFC", "COVID", "Ukraine"]
 flattened_distributions = [dc_flattened, gfc_flattened, covid_flattened, ukraine_flattened]
 # Initialise alpha and beta values
-alpha = np.linspace(-1, 1, 201)
-beta = np.exp(np.linspace(-np.log(2), np.log(2), 201))
+alpha = np.linspace(-1, 1, 101)
+beta = np.exp(np.linspace(-np.log(2), np.log(2), 101))
 
 # Optimise for alpha and beta parameter
 optimal_parameter_list = []
