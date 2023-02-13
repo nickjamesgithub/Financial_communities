@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import wasserstein_distance
-from Utilities import dendrogram_plot
+from Utilities import dendrogram_plot_test
 
 # Read in data
 linear_operator_params = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/optimal_params.csv")
@@ -21,10 +21,10 @@ sectors_labels = ["Health Care", "Industrials", "Information Technology", "Utili
 sectors_labels.sort()
 
 # Map all periods to current financial crisis
-dc_gfc_projection = linear_operator_params.iloc[1,:]
-gfc_gfc_projection = linear_operator_params.iloc[5,:]
-covid_gfc_projection = linear_operator_params.iloc[9,:]
-ukraine_gfc_projection = linear_operator_params.iloc[13,:]
+dc_gfc_projection = linear_operator_params.iloc[1,:] # 1
+gfc_gfc_projection = linear_operator_params.iloc[5,:] # 5
+covid_gfc_projection = linear_operator_params.iloc[9,:] # 9
+ukraine_gfc_projection = linear_operator_params.iloc[13,:] # 13
 
 # Store sector/crisis/returns list
 sector_crisis_returns_list = []
@@ -33,7 +33,7 @@ names_list = []
 for i in range(len(sectors_labels)):
 
     # Slice data with sector label
-    sector_return_slice = log_returns[sectors_labels[i]]
+    sector_return_slice = 100 * log_returns[sectors_labels[i]]
 
     # Get all market periods
     sector_dc = sector_return_slice.iloc[146:794, :].mean(axis=1)
@@ -83,11 +83,14 @@ for i in range(len(sector_crisis_returns_list)):
         # Slice returns from stock i and stock j
         returns_i = sector_crisis_returns_list[i]
         returns_j = sector_crisis_returns_list[j]
-        # Compute l^1 distance
+        # Compute Wasserstein distance
         wasserstein = wasserstein_distance(returns_i,returns_j)
         distance_matrix[i,j] = wasserstein
 
 # Plot Distance matrix
 plt.matshow(distance_matrix)
 plt.show()
+
+# Create dendrogram plot
+dendrogram_plot_test(distance_matrix, "wasserstein_", "sector_returns_crisis", names_list)
 
