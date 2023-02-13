@@ -29,5 +29,6 @@ for c in range(len(crisis_list)):
     lamda_mean_crisis.append(lamda_mean_list)
     sector_stock_crisis.append(sector_stock_list)
 
-x=1
-y=2
+    # Convert to Dataframe and write to csv
+    lamda_mean_df = pd.DataFrame(lamda_mean_list)
+    lamda_mean_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/lambda_path_outputs/" + "_" + crisis_list[c] + "_" + ".csv")
