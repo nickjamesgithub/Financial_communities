@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import wasserstein_distance
+from Utilities import dendrogram_plot
 
 # Read in data
 linear_operator_params = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/optimal_params.csv")
@@ -73,5 +75,19 @@ for i in range(len(sectors_labels)):
     names_list.append(sectors_labels[i] + "_" + "Ukraine")
     print("Sector iteration ", sectors_labels[i])
 
-x=1
-y=2
+# Initialise distance matrix
+distance_matrix = np.zeros((len(names_list),len(names_list)))
+# Loop over all market periods
+for i in range(len(sector_crisis_returns_list)):
+    for j in range(len(sector_crisis_returns_list)):
+        # Slice returns from stock i and stock j
+        returns_i = sector_crisis_returns_list[i]
+        returns_j = sector_crisis_returns_list[j]
+        # Compute l^1 distance
+        wasserstein = wasserstein_distance(returns_i,returns_j)
+        distance_matrix[i,j] = wasserstein
+
+# Plot Distance matrix
+plt.matshow(distance_matrix)
+plt.show()
+
