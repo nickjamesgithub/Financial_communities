@@ -53,13 +53,19 @@ covid_peak_values_array = np.array(covid_peak_values).flatten()
 ukraine_crash_values = flatten_dataframe(ukraine_crash_returns)
 ukraine_crash_values_array = np.array(ukraine_crash_values).flatten()
 
+# Print mean value of each array
+print("Dot-com median", np.median(dotcom_values_array))
+print("GFC median", np.median(gfc_values_array))
+print("COVID median", np.median(covid_values_array))
+print("COVID Peak median", np.median(covid_peak_values_array))
+print("Ukraine median", np.median(ukraine_crash_values_array))
+
 # Histogram plots
 plt.hist(dotcom_values_array, bins=100, alpha=0.2, label='Dot-com')
 plt.hist(gfc_values_array, bins=100, alpha=0.2, label='GFC')
-plt.hist(gfc_peak_values_array, bins=100, alpha=0.2, label='GFC Peak')
 plt.hist(covid_values_array, bins=100, alpha=0.2, label='COVID')
 plt.hist(covid_peak_values_array, bins=100, alpha=0.2, label='COVID Peak')
-plt.hist(ukraine_crash_values_array, bins=100, alpha=0.55, label='2022 Crash', color='red')
+plt.hist(ukraine_crash_values_array, bins=100, alpha=0.3, label='2022 Crash', color='red')
 plt.legend()
 plt.ylabel("Frequency")
 plt.xlabel("Correlation coefficient")
