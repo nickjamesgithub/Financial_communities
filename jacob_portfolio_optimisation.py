@@ -16,6 +16,7 @@ for c in range(len(crisis_list)):
     # Import data
     prices = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/Jacob_data_real.csv", index_col='Date')
     prices.columns = prices.columns.str.replace('(\.\d+)$','')
+    v_counts = prices.columns.value_counts()
 
     # Clean prices
     prices_clean = prices.iloc[:,1:]
