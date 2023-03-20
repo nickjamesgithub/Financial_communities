@@ -70,7 +70,7 @@ ax.xaxis.set_major_locator(plt.MaxNLocator(6))
 plt.savefig("Crypto_G_Market_IP_1_all")
 plt.show()
 
-# Inner product ones
+# Inner product ones #todo
 fig, ax = plt.subplots()
 plt.plot(date_index_plot, corr_split_array)
 plt.tick_params(axis='x', which='major', labelsize=10)
