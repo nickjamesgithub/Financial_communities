@@ -72,7 +72,7 @@ ip_ten_split = np.array_split(ip_split_array, 10)
 corr_ten_split = np.array_split(corr_split_array, 10)
 
 # Date index
-date_index_plot = pd.date_range('07-01-2019','14-02-2023',1200).strftime('%Y-%m-%d')
+date_index_plot = pd.date_range('10-01-2019','14-02-2023',1200).strftime('%Y-%m-%d')
 
 # Normalized eigenvalue 1
 fig, ax = plt.subplots()
@@ -82,8 +82,9 @@ for k in range(len(ip_ten_split)):
     slice_ = slice[0:1200]
     print(iterator)
     plt.plot(date_index_plot, np.abs(slice_), label="Size decile " + str(k+1))
+plt.ylim(.25,1)
 plt.tick_params(axis='x', which='major', labelsize=10)
-ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+ax.xaxis.set_major_locator(plt.MaxNLocator(3))
 plt.legend()
 plt.savefig("Crypto_G_Market_IP_1")
 plt.show()
@@ -96,8 +97,9 @@ for l in range(len(corr_ten_split)):
     slice_ = slice[0:1200]
     print(iterator)
     plt.plot(date_index_plot, slice_, label="Size decile " + str(l+1))
+plt.ylim(.25,1)
 plt.tick_params(axis='x', which='major', labelsize=10)
-ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+ax.xaxis.set_major_locator(plt.MaxNLocator(3))
 plt.legend()
 plt.savefig("Crypto_G_Explanatory_variance_eigenvalue_1")
 plt.show()

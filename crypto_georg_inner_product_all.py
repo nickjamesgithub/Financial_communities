@@ -60,13 +60,14 @@ ip_split_array = np.array(sector_pathways_ip_list)
 corr_split_array = np.array(sector_pathways_corr_list)
 
 # Date index
-date_index_plot = pd.date_range('07-01-2019','14-02-2023',1202).strftime('%Y-%m-%d')
+date_index_plot = pd.date_range('10-01-2019','14-02-2023',1202).strftime('%Y-%m-%d')
 
 # Normalized eigenvalue 1
 fig, ax = plt.subplots()
 plt.plot(date_index_plot, np.abs(ip_split_array))
 plt.tick_params(axis='x', which='major', labelsize=10)
-ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+plt.ylim(0.25,1)
 plt.savefig("Crypto_G_Market_IP_1_all")
 plt.show()
 
@@ -74,7 +75,8 @@ plt.show()
 fig, ax = plt.subplots()
 plt.plot(date_index_plot, corr_split_array)
 plt.tick_params(axis='x', which='major', labelsize=10)
-ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+plt.ylim(0.25,1)
 plt.savefig("Crypto_G_Explanatory_variance_eigenvalue_1_all")
 plt.show()
 
