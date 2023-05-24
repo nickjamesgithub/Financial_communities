@@ -9,7 +9,7 @@ if crisis == "covid":
     # Import data and slice top equities
     data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/portfolio_simulation_results_covid.csv")
     data_sort = data.sort_values('0')
-    top_portfolios = data_sort.iloc[99000:100000,:]
+    top_portfolios = data_sort.iloc[249000:250000,:]
 
     # Slice for top portfolios by equities and sectors
     top_portfolios_equities = top_portfolios.iloc[:,2:42]
@@ -34,7 +34,7 @@ if crisis == "covid":
 if crisis == "dot_com":
     data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/portfolio_simulation_results_dot_com.csv")
     data_sort = data.sort_values('0')
-    top_portfolios = data_sort.iloc[99000:100000,:]
+    top_portfolios = data_sort.iloc[249000:250000,:]
 
     # Slice for top portfolios by equities and sectors
     top_portfolios_equities = top_portfolios.iloc[:,2:42]
@@ -59,7 +59,7 @@ if crisis == "dot_com":
 if crisis == "gfc":
     data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/portfolio_simulation_results_gfc.csv")
     data_sort = data.sort_values('0')
-    top_portfolios = data_sort.iloc[99000:100000,:]
+    top_portfolios = data_sort.iloc[249000:250000,:]
 
     # Slice for top portfolios by equities and sectors
     top_portfolios_equities = top_portfolios.iloc[:,2:42]
@@ -84,7 +84,7 @@ if crisis == "gfc":
 if crisis == "ukraine":
     data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/portfolio_simulation_results_ukraine.csv")
     data_sort = data.sort_values('0')
-    top_portfolios = data_sort.iloc[99000:100000,:]
+    top_portfolios = data_sort.iloc[249000:250000,:]
 
     # Slice for top portfolios by equities and sectors
     top_portfolios_equities = top_portfolios.iloc[:,2:42]

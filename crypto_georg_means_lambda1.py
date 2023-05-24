@@ -36,5 +36,3 @@ for i in range(len(market_list)):
 
     # Lambda 1 mean + labels
     combined = lamda_1_mean_list + labels
-    x=1
-    y=2
