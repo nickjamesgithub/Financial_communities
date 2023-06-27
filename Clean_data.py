@@ -4,6 +4,7 @@ import pandas as pd
 import datetime as dt
 from scipy.stats import wasserstein_distance
 from scipy.sparse import linalg
+import openai
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/Diffusion_maps_financial/sp500_clean_labels_sectors.csv", index_col='Date')
