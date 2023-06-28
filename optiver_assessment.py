@@ -129,9 +129,6 @@ for i in range(len(hour_spacing)):
 # Convert to Dataframe
 minute_hour_df = pd.DataFrame(minute_hour_returns_list)
 minute_hour_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_avg_returns", "Y_avg_returns", "X_total_returns", "Y_total_returns", "X_Y_avg_mispricing", "X_Y_total_mispricing"]
-minute_hour_df_sorted = minute_hour_df.sort_values(by="X_Y_avg_mispricing", ascending=False)
-
-# Taking a look at anomolous moments... cannot seem to identify a temporal pattern viewing the data like this"
 
 # On average, throughout the day - how do these stocks move?
 x_returns = pd.DataFrame(minute_hour_df["X_avg_returns"])
@@ -181,4 +178,4 @@ plt.legend(['Log Returns Spread (X-Y)', 'Mean'])
 plt.show()
 
 x=1
-
+y=2
