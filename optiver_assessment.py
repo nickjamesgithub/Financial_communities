@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.tsa.stattools import coint, adfuller
 
 # Read in the data
 df = pd.read_csv("/Users/tassjames/Desktop/optiver_assessment/final_data_10s.csv")
@@ -30,19 +32,15 @@ df['Y_BID_log_returns'] = np.log(df["Y_BID"]) - np.log(df["Y_BID"].shift(1))
 df['X_ASK_log_returns'] = np.log(df["X_ASK"]) - np.log(df["X_ASK"].shift(1))
 df['Y_ASK_log_returns'] = np.log(df["Y_ASK"]) - np.log(df["Y_ASK"].shift(1))
 
-conditions = [
-    (df['X_BID_log_returns'] == 0) & (df['Y_BID_log_returns'] == 0),
-    (df['X_BID_log_returns'] > 0) & (df['Y_BID_log_returns'] > 0),
-    (df['X_BID_log_returns'] > 0) & (df['Y_BID_log_returns'] < 0),
-    (df['X_BID_log_returns'] < 0) & (df['Y_BID_log_returns'] > 0),
-    (df['X_BID_log_returns'] < 0) & (df['Y_BID_log_returns'] < 0)
-    ]
+# # Plot distribution of log returns
+# plt.hist(df["X_BID_log_returns"], bins=50, alpha = 0.4)
+# plt.hist(df["Y_BID_log_returns"], bins=50, alpha = 0.4)
+# plt.show()
 
-# create a list of the values we want to assign for each condition
-values = ['NULL', 'LONG_X_LONG_Y', 'LONG_X_SHORT_Y', 'SHORT_X_LONG_Y', 'SHORT_X_SHORT_Y']
-
-# create a new column and use np.select to assign values to it using our lists as arguments
-df['TRADE'] = np.select(conditions, values)
+x_mean = np.mean(df["X_BID_log_returns"])
+x_std = np.var(df["X_BID_log_returns"])
+y_mean = np.mean(df["Y_BID_log_returns"])
+y_std = np.var(df["Y_BID_log_returns"])
 
 # Compute static correlations
 correlation_bid = df["X_BID_log_returns"].corr(df["Y_BID_log_returns"])
@@ -69,12 +67,27 @@ def dislocation_function(df, grid_periodicity):
         ask_correlation = slice["X_ASK_log_returns"].corr(slice["Y_ASK_log_returns"])
         X_spread = slice["X_Spread"].mean()
         Y_spread = slice["Y_Spread"].mean()
-        metrics_periodicity_list.append([grid[i], bid_correlation, ask_correlation, X_spread, Y_spread])
+        x_returns_mean = slice["X_BID_log_returns"].mean()
+        x_returns_sd = slice["X_BID_log_returns"].std()
+        y_returns_mean = slice["Y_BID_log_returns"].mean()
+        y_returns_sd = slice["Y_BID_log_returns"].std()
+        metrics_periodicity_list.append([grid[i], bid_correlation, ask_correlation, X_spread, Y_spread, x_returns_mean,
+                                         y_returns_mean, x_returns_sd, y_returns_sd])
 
     # Correlation scores minute array
-    metrics_periodicity_array = np.array(metrics_periodicity_list)
+    metrics_periodicity_df = pd.DataFrame(metrics_periodicity_list)
+    metrics_periodicity_df.columns = ["Periodicity", "Bid_correlation", "Ask_correlation", "X_Spread", "Y_Spread", "X_log_returns",
+                                     "Y_log_returns", "X_standard_deviation", "Y_standard_deviation"]
+    return metrics_periodicity_df
 
-    return metrics_periodicity_array
+def stationarity_test(X, cutoff=0.01):
+    # H_0 in adfuller is unit root exists (non-stationary)
+    # We must observe significant p-value to convince ourselves that the series is stationary
+    pvalue = adfuller(X)[1]
+    if pvalue < cutoff:
+        print('p-value = ' + str(pvalue) + ' The series is likely stationary.')
+    else:
+        print('p-value = ' + str(pvalue) + ' The series is likely non-stationary.')
 
 # Loop over all minutes
 # and assess divergence in correlation
@@ -99,16 +112,61 @@ minute_spacing = np.linspace(np.min(minute_unique), np.max(minute_unique), len(m
 grouped_hour_minute = df.groupby(["Hour", "Minute"]).agg({k: np.mean for k in ['X_BID_log_returns', 'Y_BID_log_returns', 'X_Spread', 'Y_Spread']})
 
 # Data in each minute/hour increment
-minute_hour_list = []
+minute_hour_returns_list = []
 for i in range(len(hour_spacing)):
     for j in range(len(minute_spacing)):
         unique_minute_hour = df.loc[(df["Minute"]==minute_spacing[j]) & (df["Hour"]==hour_spacing[i])]
         correlation_bid_xy = np.nan_to_num(unique_minute_hour["X_BID_log_returns"].corr(unique_minute_hour["Y_BID_log_returns"]))
-        correlation_ask_xy = np.nan_to_num(unique_minute_hour["X_ASK_log_returns"].corr(unique_minute_hour["Y_ASK_log_returns"]))
-        minute_hour_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy, correlation_ask_xy])
+        x_total_returns = unique_minute_hour["X_BID_log_returns"].mean()
+        y_total_returns = unique_minute_hour["Y_BID_log_returns"].mean()
+        minute_hour_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy, x_total_returns,
+                                         y_total_returns])
+# Convert to Dataframe
+minute_hour_df = pd.DataFrame(minute_hour_returns_list)
+minute_hour_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_returns", "Y_returns"]
 
-minute_hour_array = np.array(minute_hour_list)
-x=1
+# On average, throughout the day - how do these stocks move?
+x_returns = pd.DataFrame(minute_hour_df["X_returns"])
+y_returns = pd.DataFrame(minute_hour_df["Y_returns"])
+x_cleaned_returns = x_returns.fillna(0)
+y_cleaned_returns = y_returns.fillna(0)
+
+# Partition before and after 10 o'clock in case of local stationarity / non-stationarity
+x_first_partition = x_cleaned_returns[0:120]
+y_first_partition = y_cleaned_returns[0:120]
+x_second_partition = x_cleaned_returns[180:360]
+y_second_partition = y_cleaned_returns[180:360]
+
+# Compute Stationarity for both instruments X & Y before and after 10am structural break
+stationarity_test(x_first_partition)
+stationarity_test(y_first_partition)
+stationarity_test(x_second_partition)
+stationarity_test(y_second_partition)
+
+# Test for correlation and cointegration
+print('Correlation: ' + str(np.corrcoef(np.array(x_cleaned_returns["X_returns"]), np.array(y_cleaned_returns["Y_returns"]))))
+score, pvalue, _ = coint(np.nan_to_num(x_cleaned_returns["X_returns"]), np.nan_to_num(y_cleaned_returns["Y_returns"]))
+print('Cointegration test p-value: ' + str(pvalue))
+
+# The series appear to be both correlated and cointegrated
+
+# Compute Cumulative returns
+x_avg_cum_returns = x_cleaned_returns.cumsum()
+y_avg_cum_returns = y_cleaned_returns.cumsum()
+
+# Plot of cumulative log returns for X vs Y
+plt.plot(x_avg_cum_returns)
+plt.plot(y_avg_cum_returns)
+plt.xlabel("Minutes throughout the day")
+plt.ylabel("Avg cumulative returns")
+plt.show()
+
+# Plot deviation between average returns for 2 instruments: X & Y
+plt.plot(x_cleaned_returns["X_returns"] - y_cleaned_returns["Y_returns"])# Plot the spread between average returns
+plt.axhline((x_cleaned_returns["X_returns"] - y_cleaned_returns["Y_returns"]).mean(), color='red', alpha = 0.5, linestyle='--') # Add the mean
+plt.xlabel('Time')
+plt.legend(['Price Spread', 'Mean'])
+plt.show()
 
 
 
