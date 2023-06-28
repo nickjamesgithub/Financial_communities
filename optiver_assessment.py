@@ -71,13 +71,14 @@ def dislocation_function(df, grid_periodicity):
         x_returns_sd = slice["X_BID_log_returns"].std()
         y_returns_mean = slice["Y_BID_log_returns"].mean()
         y_returns_sd = slice["Y_BID_log_returns"].std()
+        returns_mean_diff = x_returns_mean - y_returns_mean
         metrics_periodicity_list.append([grid[i], bid_correlation, ask_correlation, X_spread, Y_spread, x_returns_mean,
-                                         y_returns_mean, x_returns_sd, y_returns_sd])
+                                         y_returns_mean, x_returns_sd, y_returns_sd, returns_mean_diff])
 
     # Correlation scores minute array
     metrics_periodicity_df = pd.DataFrame(metrics_periodicity_list)
     metrics_periodicity_df.columns = ["Periodicity", "Bid_correlation", "Ask_correlation", "X_Spread", "Y_Spread", "X_log_returns",
-                                     "Y_log_returns", "X_standard_deviation", "Y_standard_deviation"]
+                                     "Y_log_returns", "X_standard_deviation", "Y_standard_deviation", "Returns_mean_difference"]
     return metrics_periodicity_df
 
 def stationarity_test(X, cutoff=0.01):
@@ -91,12 +92,12 @@ def stationarity_test(X, cutoff=0.01):
 
 # Loop over all minutes
 # and assess divergence in correlation
-minute_grid = dislocation_function(df, "Minute")
-hour_grid = dislocation_function(df, "Hour")
-day_grid = dislocation_function(df, "Day")
-week_grid = dislocation_function(df, "Week")
-month_grid = dislocation_function(df, "Month")
-year_grid = dislocation_function(df, "Year")
+dislocation_minute_grid = dislocation_function(df, "Minute")
+dislocation_hour_grid = dislocation_function(df, "Hour")
+dislocation_day_grid = dislocation_function(df, "Day")
+dislocation_week_grid = dislocation_function(df, "Week")
+dislocation_month_grid = dislocation_function(df, "Month")
+dislocation_year_grid = dislocation_function(df, "Year")
 
 # Study evolution of correlation throughout the 10am time series
 # Loop over unique days within the 10am hour
@@ -117,19 +118,31 @@ for i in range(len(hour_spacing)):
     for j in range(len(minute_spacing)):
         unique_minute_hour = df.loc[(df["Minute"]==minute_spacing[j]) & (df["Hour"]==hour_spacing[i])]
         correlation_bid_xy = np.nan_to_num(unique_minute_hour["X_BID_log_returns"].corr(unique_minute_hour["Y_BID_log_returns"]))
-        x_total_returns = unique_minute_hour["X_BID_log_returns"].mean()
-        y_total_returns = unique_minute_hour["Y_BID_log_returns"].mean()
-        minute_hour_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy, x_total_returns,
-                                         y_total_returns])
+        x_total_returns = unique_minute_hour["X_BID_log_returns"].sum()
+        y_total_returns = unique_minute_hour["Y_BID_log_returns"].sum()
+        x_avg_returns = unique_minute_hour["X_BID_log_returns"].sum()
+        y_avg_returns = unique_minute_hour["Y_BID_log_returns"].sum()
+        x_y_avg_mispricing = x_avg_returns - y_avg_returns
+        x_y_total_mispricing = np.nan_to_num(x_total_returns - y_total_returns)
+        minute_hour_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy, x_avg_returns, y_avg_returns,
+                                         x_total_returns, y_total_returns, x_y_avg_mispricing, x_y_total_mispricing])
 # Convert to Dataframe
 minute_hour_df = pd.DataFrame(minute_hour_returns_list)
-minute_hour_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_returns", "Y_returns"]
+minute_hour_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_avg_returns", "Y_avg_returns", "X_total_returns", "Y_total_returns", "X_Y_avg_mispricing", "X_Y_total_mispricing"]
+minute_hour_df_sorted = minute_hour_df.sort_values(by="X_Y_avg_mispricing", ascending=False)
+
+# Taking a look at anomolous moments... cannot seem to identify a temporal pattern viewing the data like this"
 
 # On average, throughout the day - how do these stocks move?
-x_returns = pd.DataFrame(minute_hour_df["X_returns"])
-y_returns = pd.DataFrame(minute_hour_df["Y_returns"])
+x_returns = pd.DataFrame(minute_hour_df["X_avg_returns"])
+y_returns = pd.DataFrame(minute_hour_df["Y_avg_returns"])
 x_cleaned_returns = x_returns.fillna(0)
 y_cleaned_returns = y_returns.fillna(0)
+
+# Key points of time:
+# 8:00am Y outperforms X 3 times magnitude positive
+# 10:00am Y underperforms X 2 times magnitude negative
+# 11:00am - 11:03am X appears to underperform Y in a recalibration
 
 # Partition before and after 10 o'clock in case of local stationarity / non-stationarity
 x_first_partition = x_cleaned_returns[0:120]
@@ -144,12 +157,11 @@ stationarity_test(x_second_partition)
 stationarity_test(y_second_partition)
 
 # Test for correlation and cointegration
-print('Correlation: ' + str(np.corrcoef(np.array(x_cleaned_returns["X_returns"]), np.array(y_cleaned_returns["Y_returns"]))))
-score, pvalue, _ = coint(np.nan_to_num(x_cleaned_returns["X_returns"]), np.nan_to_num(y_cleaned_returns["Y_returns"]))
+print('Correlation: ' + str(np.corrcoef(np.array(x_cleaned_returns["X_avg_returns"]), np.array(y_cleaned_returns["Y_avg_returns"]))))
+score, pvalue, _ = coint(np.nan_to_num(x_cleaned_returns["X_avg_returns"]), np.nan_to_num(y_cleaned_returns["Y_avg_returns"]))
 print('Cointegration test p-value: ' + str(pvalue))
 
 # The series appear to be both correlated and cointegrated
-
 # Compute Cumulative returns
 x_avg_cum_returns = x_cleaned_returns.cumsum()
 y_avg_cum_returns = y_cleaned_returns.cumsum()
@@ -162,11 +174,11 @@ plt.ylabel("Avg cumulative returns")
 plt.show()
 
 # Plot deviation between average returns for 2 instruments: X & Y
-plt.plot(x_cleaned_returns["X_returns"] - y_cleaned_returns["Y_returns"])# Plot the spread between average returns
-plt.axhline((x_cleaned_returns["X_returns"] - y_cleaned_returns["Y_returns"]).mean(), color='red', alpha = 0.5, linestyle='--') # Add the mean
+plt.plot(x_cleaned_returns["X_avg_returns"] - y_cleaned_returns["Y_avg_returns"])# Plot the spread between average returns
+plt.axhline((x_cleaned_returns["X_avg_returns"] - y_cleaned_returns["Y_avg_returns"]).mean(), color='red', alpha = 0.5, linestyle='--') # Add the mean
 plt.xlabel('Time')
-plt.legend(['Price Spread', 'Mean'])
+plt.legend(['Log Returns Spread (X-Y)', 'Mean'])
 plt.show()
 
-
+x=1
 
