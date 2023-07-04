@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.stattools import coint, adfuller
 from scipy.signal import savgol_filter
 from scipy.stats import wasserstein_distance
-
+import statsmodels.api as sm
 make_plots = True
 
 # Read in the data
@@ -89,35 +89,55 @@ ratios = S1 / S2
 z_scores = z_scores
 
 # Simulate trading
-# Start with no money and no positions
 money = 0
-iterations = 50000
+money_list = [0]
+iterations = 200000
 flag = "NEUTRAL"
+flag_list = []
 z_scores_long_x = []
 z_scores_short_x = []
+long_x_decision = []
+short_x_decision = []
+exit_long_x_decision = []
+exit_short_x_decision = []
 for i in range(iterations):
     print(flag)
     print("Iteration", i)
     # print("Ratio is", ratios[i])
     print("Z-score is", z_scores[i])
     # Sell short if the z-score is > 1
+    flag_list.append(flag)
     if flag == "LONG_X":
         # returns = df["X_ASK"][i] - df["Y_BID"][i] * ratios[i]
         money += df["X_ASK"][i] - df["Y_BID"][i] * ratios[i]
-        print(df["Time"][i])
+        money_list.append(money)
         z_scores_long_x.append([z_scores[i], money, flag])
     if flag == "SHORT_X":
-        money -= df["X_BID"] - df["Y_ASK"][i] * ratios[i]
-        print(df["Time"][i])
+        money -= df["X_BID"][i] - df["Y_ASK"][i] * ratios[i]
+        money_list.append(money)
+        # print(df["Time"][i])
         z_scores_short_x.append([z_scores[i], money, flag])
     if flag == "LONG_X" and z_scores[i] < -0.5:
         flag = "NEUTRAL"
+        exit_long_x_decision.append([i]) # df["Time"]
     if flag == "SHORT_X" and z_scores[i] < 0.5:
         flag = "NEUTRAL"
+        exit_short_x_decision.append([i])
     if flag == "NEUTRAL" and z_scores[i] < -1:
         flag = "LONG_X"
+        long_x_decision.append([i])
     if flag == "NEUTRAL" and z_scores[i] > 1:
         flag = "SHORT_X"
+        short_x_decision.append([i])
+    #todo CHECK THIS
+    if flag == "NEUTRAL" and z_scores[i] < np.abs(1):
+        money_list.append(money_list[-1])
+
+# Print Evolutionary money
+grid = np.linspace(0,len(money_list),len(money_list))
+
+plt.plot(grid, money_list)
+plt.show()
+
 x=1
 y=2
-print(money)
