@@ -147,8 +147,8 @@ for i in range(len(hour_spacing)):
         x_y_avg_mispricing = x_avg_returns - y_avg_returns
         x_bid_liquidity = unique_minute_hour["X_BID_VOL"].mean()
         x_ask_liquidity = unique_minute_hour["X_ASK_VOL"].mean()
-        y_bid_liquidity = unique_minute_hour["X_BID_VOL"].mean()
-        y_ask_liquidity = unique_minute_hour["X_ASK_VOL"].mean()
+        y_bid_liquidity = unique_minute_hour["Y_BID_VOL"].mean()
+        y_ask_liquidity = unique_minute_hour["Y_ASK_VOL"].mean()
         minute_hour_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy,
                                          x_spread, y_spread, x_avg_returns, y_avg_returns,x_y_avg_mispricing,
                                          x_bid_liquidity, x_ask_liquidity, y_bid_liquidity, y_ask_liquidity])
@@ -171,11 +171,22 @@ y_cleaned_returns = y_returns.fillna(0)
 plt.plot(np.nan_to_num(df["X_BID"]/df["Y_BID"]))
 plt.show()
 
-# Liquidity Throughout the day
-plt.plot(minute_hour_df["X_avg_spread"], label="X-liquidity")
-plt.plot(minute_hour_df["Y_avg_spread"], label="Y-liquidity")
+# Liquidity Throughout the day (bid-ask spread)
+plt.plot(minute_hour_df["X_avg_spread"], label="X-liquidity-spread")
+plt.plot(minute_hour_df["Y_avg_spread"], label="Y-liquidity-spread")
 plt.savefig("Opt_Liquidity_over_time")
 plt.show()
+
+# Liquidity Throughout the day (bid-ask spread)
+plt.plot(minute_hour_df["x_bid_liquidity"], label = "X-liquidity-volume-bid")
+plt.plot(minute_hour_df["x_ask_liquidity"], label = "X-liquidity-volume-ask")
+plt.plot(minute_hour_df["y_bid_liquidity"], label = "Y-liquidity-volume-bid")
+plt.plot(minute_hour_df["y_ask_liquidity"], label = "Y-liquidity-volume-ask")
+plt.legend()
+plt.show()
+
+x=2
+y=2
 
 # Spot Divergence throughout the average day (subject to liquidity)
 
