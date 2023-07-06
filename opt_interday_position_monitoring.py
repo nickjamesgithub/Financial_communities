@@ -9,10 +9,6 @@ sns.set(style="whitegrid")
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from statsmodels.tsa.stattools import coint, adfuller
-from scipy.signal import savgol_filter
-from scipy.stats import wasserstein_distance
-import statsmodels.api as sm
 import datetime
 
 make_plots = True
