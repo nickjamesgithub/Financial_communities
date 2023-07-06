@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.stattools import coint, adfuller
 from scipy.signal import savgol_filter
 from scipy.stats import wasserstein_distance
+from scipy.signal import welch
+import datetime
+from scipy.fftpack import fft, fftshift
+from scipy.spatial.distance import euclidean
 
 make_plots = True
 
@@ -46,7 +50,45 @@ df['Y_BID_log_returns'] = np.log(df["Y_BID"]) - np.log(df["Y_BID"].shift(1))
 df['X_ASK_log_returns'] = np.log(df["X_ASK"]) - np.log(df["X_ASK"].shift(1))
 df['Y_ASK_log_returns'] = np.log(df["Y_ASK"]) - np.log(df["Y_ASK"].shift(1))
 
+# Study power spectrum
+x_returns = np.nan_to_num(df["X_BID_log_returns"])
+y_returns = np.nan_to_num(df["Y_BID_log_returns"])
+x_returns_demean = x_returns - np.mean(x_returns)
+y_returns_demean = y_returns - np.mean(y_returns)
 
+# Plot power spectrum
+log_periodogram_x = np.log(np.abs((fft(fftshift(x_returns_demean)))**2))[1:len(y_returns_demean)//2]
+log_periodogram_y = np.log(np.abs((fft(fftshift(y_returns_demean)))**2))[1:len(y_returns_demean)//2]
+
+# Parameters
+window_size = (6 * 60 * 8) + 1 # Try various smoothing windows corresponding to 3 hours, 8 hours, etc.
+polynomial_order = 2
+X_spectrum_smooth = np.nan_to_num(savgol_filter(log_periodogram_x, window_size, polynomial_order))
+Y_spectrum_smooth = np.nan_to_num(savgol_filter(log_periodogram_y, window_size, polynomial_order))
+
+# Plot power spectrum - X
+plt.plot(np.linspace(0, 0.5, (len(log_periodogram_x))), X_spectrum_smooth, label="X-log-periodogram", alpha=0.25)
+plt.legend()
+plt.savefig("opt_securities_power_spectrum_X")
+plt.show()
+
+# Plot power spectrum - Y
+plt.plot(np.linspace(0, 0.5, (len(log_periodogram_y))), Y_spectrum_smooth, label="Y-log-periodogram", alpha=0.25)
+plt.legend()
+plt.savefig("opt_securities_power_spectrum_Y")
+plt.show()
+
+# Plot element-wise difference - is there any trend here?
+plt.plot(X_spectrum_smooth - Y_spectrum_smooth, label="Element-wise-first-difference")
+plt.plot(savgol_filter((X_spectrum_smooth - Y_spectrum_smooth), 15001, 2), label="Smoothed-difference-in-XY-spectra")
+plt.savefig("Opt_securities_power_spectrum_difference")
+plt.show()
+
+# Although there is not an obvious difference in periodic behaviour, the L1 difference plot indicates that there may be some trend in the differences
+# Of course, we have to be aware of excessive smoothing
+# It's possible that we see some medium-term reversal behaviour
+
+# There is no notable difference in the Log power spectrum of the securities. Same peaks (implies limited intra-day, periodic phenomenon)
 x_mean = np.mean(df["X_BID_log_returns"])
 x_std = np.var(df["X_BID_log_returns"])
 y_mean = np.mean(df["Y_BID_log_returns"])
@@ -183,10 +225,8 @@ plt.plot(minute_hour_df["x_ask_liquidity"], label = "X-liquidity-volume-ask")
 plt.plot(minute_hour_df["y_bid_liquidity"], label = "Y-liquidity-volume-bid")
 plt.plot(minute_hour_df["y_ask_liquidity"], label = "Y-liquidity-volume-ask")
 plt.legend()
+plt.savefig("Opt_liquidity_volume")
 plt.show()
-
-x=2
-y=2
 
 # Spot Divergence throughout the average day (subject to liquidity)
 
@@ -197,7 +237,7 @@ y=2
 # print('Cointegration test p-value: ' + str(pvalue))
 #
 # # Based on cointegration score between cleaned time series - we cannot reject null
-#
+
 # Moving average function
 def moving_average(returns, window):
     moving_avg = []
@@ -248,49 +288,9 @@ argmax_100 = np.argmax(difference_smoothed_ts[0:100])
 argmin_100 = np.argmin(difference_smoothed_ts[0:100])
 argmax_200_400 = 200 + np.argmax(difference_smoothed_ts[200:])
 
-df = pd.read_csv('final_data_10s.csv', index_col='Time',parse_dates=True)
-
-dat_10am=df.loc[(df["Hour"]==8) & (df["Minute"]==11) & (df["X_Spread"]<20) & (df["Y_Spread"]<20)]
-dat_11am=df.loc[(df["Hour"]==13) & (df["Minute"]==55)]
-dat_11am.index=dat_11am.index.date
-strat1=dat_11am.X_BID+dat_10am.Y_BID - dat_10am.X_ASK -dat_11am.Y_ASK #long X, short Y
-strat1.describe()
-x=1
-
-# # # Plot
-# # # Plot deviation between average returns for 2 instruments: X & Y
-# # plt.plot(x_cleaned_returns["X_avg_returns"] - y_cleaned_returns["Y_avg_returns"])# Plot the spread between average returns
-# # plt.axhline((x_cleaned_returns["X_avg_returns"] - y_cleaned_returns["Y_avg_returns"]).mean(), color='red', alpha = 0.5, linestyle='--') # Add the mean
-# # plt.xlabel('Time')
-# # plt.legend(['Log Returns Spread (X-Y)', 'Mean'])
-# # plt.savefig("Opt_difference_avg_returns_time")
-# # plt.show()
-# #
-# # x=1
-# # y=2
-#
-# # #todo BACKTEST IS WORK IN PROGRESS
-# # def backtest_lm_training(df_train, sliding_window, buy_ratio, sell_ratio):
-# #     x_bid_log_returns = df_train["X_BID_log_returns"]
-# #     y_bid_log_returns = df_train["Y_BID_log_returns"]
-# #     x_ask_log_returns = df_train["X_ASK_log_returns"]
-# #     y_ask_log_returns = df_train["Y_ASK_log_returns"]
-# #
-# #     # Compute difference time series
-# #     difference_bid_ts = x_bid_log_returns - y_bid_log_returns
-# #     # difference_ask_ts = x_ask_log_returns - y_ask_log_returns
-# #
-# #     flag = 0
-# #     strategy_returns = []
-# #     count = 0
-# #     for i in range(sliding_window, len(x_bid_log_returns)):
-# #         if flag == 1:
-# #             strategy_returns.append(x_bid_log_returns)
-# #         if flag == 0 and difference_bid_ts < -.02:
-# #             flag = 1
-# #             count += 1
-# #         if flag == 1 and difference_bid_ts > -.0075:
-# #             flag = 0
-# #         count += 1
-# #     cum_return = np.sum(strategy_returns)
-# #     return cum_return
+# df = pd.read_csv('final_data_10s.csv', index_col='Time',parse_dates=True)
+# dat_10am=df.loc[(df["Hour"]==8) & (df["Minute"]==11) & (df["X_Spread"]<20) & (df["Y_Spread"]<20)]
+# dat_11am=df.loc[(df["Hour"]==13) & (df["Minute"]==55)]
+# dat_11am.index=dat_11am.index.date
+# strat1=dat_11am.X_BID+dat_10am.Y_BID - dat_10am.X_ASK -dat_11am.Y_ASK #long X, short Y
+# strat1.describe()
