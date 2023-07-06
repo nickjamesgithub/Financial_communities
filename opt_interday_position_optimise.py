@@ -122,10 +122,10 @@ def backtest(max_positions, long_x_parameter_open, long_x_parameter_close,
     return money_list_cs_fix, state_list_cs_fix, long_counter_list, short_counter_list, long_x_decision, exit_long_x_decision, short_x_decision, exit_short_x_decision
 
 
-long_x_open = [-1.25, -1, -.75]
-long_x_close = [-.5, -.25 ,0]
-short_x_open = [1.25, 1, .75]
-short_x_close = [.5,.25,  0]
+long_x_open = [-1.5,-1.4,-1.3,-1.2,-1.1,-1,-.9,-.8,-.7]
+long_x_close = [-.3,-.2,-.1 ,0]
+short_x_open = [1.5,1.4,1.3,1.2,1.1,1,.9,.8,.7]
+short_x_close = [.3,.2,.1,0]
 results = []
 for lo in range(len(long_x_open)):
     for lc in range(len(long_x_close)):
@@ -138,16 +138,25 @@ for lo in range(len(long_x_open)):
                 results.append([money_list_cs_fix[-1], long_x_open[lo],long_x_close[lc], short_x_open[so], short_x_close[sc]])
     print("iteration", long_x_open[lo])
 
-block = 1
+# Make results list a dataframe
+results_df = pd.DataFrame(results)
+results_df.columns = ["Profit", "Long_open", "Long_close", "Short_open", "Short_close"]
+results_df_sorted = results_df.sort_values(by="Profit")
+
+# After inspecting the table let us proceed with approximate modal avg hyperparameters for argmax profit:
+# long_open = -.75
+# long_close = -.2
+# short_open = 1.3
+# short close = .15
 
 # Generate grid for plots
 grid = np.linspace(1,len(ratio_xy),len(ratio_xy))
 
-# # Plot money over time
-# plt.plot(grid, money_list_cs_fix)
-# plt.xlabel("Days in strategy")
-# plt.ylabel("Profit")
-# plt.show()
+# Plot money over time
+plt.plot(grid, money_list_cs_fix)
+plt.xlabel("Days in strategy")
+plt.ylabel("Profit")
+plt.show()
 
 # Long and Short Strategy Counter List
 plt.plot(grid, long_counter_list, label="Long_X_strategy")
