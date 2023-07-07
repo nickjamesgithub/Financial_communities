@@ -12,7 +12,7 @@ import itertools
 
 
 make_plots = False
-model = "Train" # Train/Test/All
+model = "All" # Train/Test/All
 # Read in the data
 df = pd.read_csv(r"C:\Users\60848\Desktop\opt\final_data_10s.csv")
 if model == "Train":
@@ -202,7 +202,6 @@ plt.savefig("Cumulative_returns_X_Y_8_00_10")
 plt.show()
 
 # Loop over unique dates
-
 up_start_days_x = []
 up_start_days_y = []
 down_start_days_x = []
@@ -307,6 +306,9 @@ for i in range(len(hour_spacing)):
 minute_hour_second_df = pd.DataFrame(minute_hour_second_returns_list)
 minute_hour_second_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_avg_spread", "Y_avg_spread", "X_avg_returns", "Y_avg_returns", "X_Y_avg_mispricing",
                           "x_bid_liquidity", "x_ask_liquidity", "y_bid_liquidity", "y_ask_liquidity"]
+
+#todo Fit local trend model to determine whether to go long X or long Y
+# and subsequently close out
 
 # On average, throughout the day - how do these stocks move?
 x_bid = df["X_BID"]
@@ -413,15 +415,12 @@ argmax_200_400 = 200 + np.argmax(difference_smoothed_ts[200:])
 data = pd.read_csv(r"C:\Users\60848\Desktop\opt\final_data_10s.csv", index_col='Time', parse_dates=True)
 data.index #see index is datetime format
 data.loc['2020-08-01 08'] #Filter data based on one day, hour etc
-data = data.iloc[:400000,:]
 
 price_names=['X_BID','X_ASK','Y_BID','Y_ASK']
 vol_names=['X_BID_VOL','X_ASK_VOL','Y_BID_VOL','Y_ASK_VOL']
 price_df=data[price_names];vol_df=data[vol_names]
 data['X_spread']=data.X_ASK - data.X_BID; data['Y_spread']=data.Y_ASK - data.Y_BID
 spread_df=data[['X_spread','Y_spread']]
-
-
 
 # Intra-day trading strategy
 # When we refer to LONG, we are referring to the ratio of X/Y
@@ -436,6 +435,7 @@ close_second = np.arange(20, 60, 10)
 intra_day_results = []
 for o in range(len(open_second)):
     for c in range(len(close_second)):
+
             # OPEN
             open_time = datetime.time(8, np.int(0), open_second[o])
             open_slice = data.loc[(data.index.time==open_time) & (spread_df.X_spread<20) & (spread_df.Y_spread<20)]
@@ -455,12 +455,81 @@ for o in range(len(open_second)):
             cumulative_profit = np.cumsum(strategy_clean)
             intra_day_results.append([cumulative_profit[-1], open_second[o], close_second[c]])
 
+            plt.plot(cumulative_profit)
+            plt.show()
+
     print("Iteration ", open_second[o])
 
 # Make intraday results a dataframe
 intra_day_results_df = pd.DataFrame(intra_day_results)
 intra_day_results_df.columns = ["Profit", "Open_second", "Close_second"]
 intra_day_results_df.sort_values(by="Profit")
+
+# Trend model with evolutionary mispricing
+strategy_profit_list = []
+regression_prediction = []
+smoothing_window = 50
+df["XY_mispricing"] = df["X_BID_log_returns"] - df["Y_BID_log_returns"]
+from sklearn.linear_model import LinearRegression
+
+# Evolutionary mispricing 8am
+evolutionary_mispricing_8am = []
+for i in range(len(date_unique)):
+    unique_minute_hour_i = df.loc[(df["Minute"] == 0) & (df["Hour"] == 8) & (df["Second"] == 0)].iloc[i]
+    mispricing = unique_minute_hour_i["X_BID_log_returns"] - unique_minute_hour_i["Y_BID_log_returns"]
+    evolutionary_mispricing_8am.append(np.nan_to_num(mispricing))
+
+# Evolutionary mispricing at 8am
+plt.plot(evolutionary_mispricing_8am)
+plt.show()
+
+# Do we have a trend in the evolutionary 8am mispricing?
+cumulative_mispricing = np.array(evolutionary_mispricing_8am).cumsum()
+plt.plot(np.array(evolutionary_mispricing_8am).cumsum())
+plt.savefig("Evolutionary_8am_mispricing_cumsum")
+plt.show()
+
+for i in range(50, len(date_unique)-1):
+    # Run rolling linear regression
+    unique_date_i = df.loc[(df["Date"] == date_unique[i])]
+    trailing_data_open = df.loc[(df["Hour"]==8) & (df["Minute"] == 0) & (df["Second"] == 0)]["XY_mispricing"].fillna(0).iloc[(i-smoothing_window):i]
+    trailing_data_open_cumulative = cumulative_mispricing[(i-smoothing_window):i]
+    grid = np.linspace(1,smoothing_window, smoothing_window)
+
+    # Fit linear regression on mispricing at 8am and predict the next value being above/below 0
+    reg = LinearRegression().fit(grid.reshape(-1,1), np.array(trailing_data_open_cumulative).reshape(-1,1))
+    next_value_prediction = reg.predict(np.array(51).reshape(-1, 1))[0][0]
+    regression_prediction.append(next_value_prediction)
+
+    # Slice open and close times intra-day
+    current_open = unique_date_i.loc[(unique_date_i["Hour"] == 8) & (unique_date_i["Minute"] == 0) & (unique_date_i["Second"] == 0)]
+    # current_open_mispricing = current_open["XY_mispricing"].iloc[0]
+    current_close = unique_date_i.loc[(unique_date_i["Hour"] == 8) & (unique_date_i["Minute"] == 2) & (unique_date_i["Second"] == 0)]
+    # current_close_mispricing = current_close["XY_mispricing"].iloc[0]
+
+    if next_value_prediction >= 0:
+        # This means X-Y is HIGH and therefore X is OVERPRICED
+        # We would SHORT X and LONG Y
+        # strategy = close_slice.Y_BID + open_slice.X_BID - open_slice.Y_ASK - close_slice.X_ASK
+        #todo TRYING STRATEGY PROFITS OTHER WAY AROUND
+        strategy_profit = current_close["Y_BID"].iloc[0] + current_open["X_BID"].iloc[0] - current_open["Y_ASK"].iloc[0] - current_close["X_ASK"].iloc[0]
+    else:
+        strategy_profit = current_close["X_BID"].iloc[0] + current_open["Y_BID"].iloc[0] - current_open["X_ASK"].iloc[0] - current_close["Y_ASK"].iloc[0]
+        # close_slice.X_BID + open_slice.Y_BID - open_slice.X_ASK - close_slice.Y_ASK
+
+    strategy_profit_list.append(np.nan_to_num(strategy_profit))
+    print("Iteration ", i)
+
+# Plot regression function
+plt.plot(np.linspace(smoothing_window,len(date_unique),len(date_unique)-smoothing_window-1), regression_prediction)
+plt.plot(np.linspace(1,len(np.array(evolutionary_mispricing_8am).cumsum()), len(np.array(evolutionary_mispricing_8am).cumsum())), np.array(evolutionary_mispricing_8am).cumsum())
+plt.show()
+
+# Print Strategy profit
+print(np.sum(strategy_profit_list))
+
+plt.plot(np.array(strategy_profit_list).cumsum())
+plt.show()
 
 x=1
 y=2
