@@ -10,8 +10,9 @@ from scipy.fftpack import fft, fftshift
 from scipy.spatial.distance import euclidean
 import itertools
 
+
 make_plots = False
-model = "All" # Train/Test/All
+model = "Train" # Train/Test/All
 # Read in the data
 df = pd.read_csv(r"C:\Users\60848\Desktop\opt\final_data_10s.csv")
 if model == "Train":
@@ -208,10 +209,10 @@ down_start_days_x = []
 down_start_days_y = []
 for d in range(len(date_unique)):
     unique_date = df.loc[(df["Date"] == date_unique[d])]
-    if unique_date["X_BID_log_returns"].iloc[1] > 0 and unique_date["Y_BID_log_returns"].iloc[1] > 0:
+    if unique_date["X_BID_log_returns"].iloc[0:6].mean() > unique_date["Y_BID_log_returns"].iloc[0:6].mean():
         up_start_days_x.append([list(unique_date["X_ASK_log_returns"].fillna(0))])
         up_start_days_y.append([list(unique_date["Y_ASK_log_returns"].fillna(0))])
-    if unique_date["X_BID_log_returns"].iloc[1] < 0 and unique_date["Y_BID_log_returns"].iloc[1] < 0:
+    if unique_date["X_BID_log_returns"].iloc[0:6].mean() < unique_date["Y_BID_log_returns"].iloc[0:6].mean():
         down_start_days_x.append([list(unique_date["X_ASK_log_returns"].fillna(0))])
         down_start_days_y.append([list(unique_date["Y_ASK_log_returns"].fillna(0))])
 
@@ -222,33 +223,69 @@ down_start_x_array = np.array(list(itertools.chain.from_iterable(down_start_days
 down_start_y_array = np.array(list(itertools.chain.from_iterable(down_start_days_y)))
 
 # Determine consistency of argmin and argmax of elementwise difference curves
+window_size = 31
+polynomial_order = 2
+argmin_up_list = []
+argmax_up_list = []
+argmin_down_list = []
+argmax_down_list = []
 for i in range(len(up_start_x_array)):
+    print("Iteration ", i)
     # Up difference curve
-    up_start_x_cumsum = up_start_x_array[i,:].cumsum()
-    up_start_y_cumsum = up_start_y_array[i,:].cumsum()
-
+    up_start_x_cumsum = np.array(up_start_x_array[i]).cumsum()
+    up_start_y_cumsum = np.array(up_start_y_array[i]).cumsum()
     up_xy_diffs = up_start_x_cumsum - up_start_y_cumsum
-    argmin_up = np.argmin(up_xy_diffs)
-    argmax_up = np.argmax(up_xy_diffs)
+    smoothed_diffs_up = np.nan_to_num(savgol_filter(up_xy_diffs, window_size, polynomial_order))
+    argmin_up = np.argmin(smoothed_diffs_up)
+    argmax_up = np.argmax(smoothed_diffs_up)
+    argmin_up_list.append(argmin_up)
+    argmax_up_list.append(argmax_up)
 
-    plt.plot(up_start_x_cumsum)
-    plt.plot(up_start_y_cumsum)
-    plt.savefig("opt_xy_cumsum")
-    plt.show()
+    # Plot smoothed difference curve and identify argmin/argmax
+    plt.plot(up_xy_diffs, alpha = 0.4)
+    plt.plot(smoothed_diffs_up)
+plt.ylabel("Cumulative_difference_XY")
+plt.xlabel("10_second_increments")
+plt.savefig("opt_smoothed_diffs_up_days")
+plt.show()
 
-    plt.plot(up_xy_diffs)
-    plt.savefig("opt_xy_diffs")
-    plt.show()
-
+for j in range(len(down_start_x_array)):
+    print("Iteration ", j)
     # Down difference curve
-    down_start_x_cumsum = down_start_x_array.cumsum()
-    down_start_y_cumsum = down_start_y_array.cumsum()
+    down_start_x_cumsum = np.array(down_start_x_array[j]).cumsum()
+    down_start_y_cumsum = np.array(down_start_y_array[j]).cumsum()
     down_xy_diffs = down_start_x_cumsum - down_start_y_cumsum
+    smoothed_diffs_down = np.nan_to_num(savgol_filter(down_xy_diffs, window_size, polynomial_order))
+    argmin_down = np.argmin(smoothed_diffs_down)
+    argmax_down = np.argmax(smoothed_diffs_down)
+    argmin_down_list.append(argmin_down)
+    argmax_down_list.append(argmax_down)
+
+    # Plot smoothed difference curve and identify argmin/argmax
+    plt.plot(down_xy_diffs, alpha=0.4)
+    plt.plot(smoothed_diffs_down)
+plt.ylabel("Cumulative_difference_XY")
+plt.xlabel("10_second_increments")
+plt.savefig("opt_smoothed_diffs_down_days")
+plt.show()
+
+# Up days
+plt.hist(argmin_up_list, label="argmin-up", alpha = 0.4, color='blue')
+plt.hist(argmax_up_list, label="argmax-up", alpha = 0.4, color='red')
+plt.legend()
+plt.savefig("opt_min_max_divergence_up")
+plt.show()
+
+# Down days
+plt.hist(argmin_down_list, label="argmin-down", alpha = 0.4, color='blue')
+plt.hist(argmax_down_list, label="argmax-down", alpha = 0.4, color='red')
+plt.legend()
+plt.savefig("opt_min_max_divergence_down")
+plt.show()
 
 #todo CLUSTER argmin and argmax of difference and see if there is a trend in the days
-
 # Data in each minute/hour increment
-minute_hour_returns_list = []
+minute_hour_second_returns_list = []
 for i in range(len(hour_spacing)):
     for j in range(len(minute_spacing)):
         for k in range(len(second_spacing)):
@@ -263,11 +300,11 @@ for i in range(len(hour_spacing)):
             x_ask_liquidity = unique_minute_hour["X_ASK_VOL"].mean()
             y_bid_liquidity = unique_minute_hour["Y_BID_VOL"].mean()
             y_ask_liquidity = unique_minute_hour["Y_ASK_VOL"].mean()
-            minute_hour_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy,
+            minute_hour_second_returns_list.append([hour_spacing[i], minute_spacing[j], len(unique_minute_hour), correlation_bid_xy,
                                              x_spread, y_spread, x_avg_returns, y_avg_returns,x_y_avg_mispricing,
                                              x_bid_liquidity, x_ask_liquidity, y_bid_liquidity, y_ask_liquidity])
 # Convert to Dataframe
-minute_hour_second_df = pd.DataFrame(minute_hour_returns_list)
+minute_hour_second_df = pd.DataFrame(minute_hour_second_returns_list)
 minute_hour_second_df.columns = ["Hour", "Minute", "Samples", "Correlation", "X_avg_spread", "Y_avg_spread", "X_avg_returns", "Y_avg_returns", "X_Y_avg_mispricing",
                           "x_bid_liquidity", "x_ask_liquidity", "y_bid_liquidity", "y_ask_liquidity"]
 
@@ -372,55 +409,58 @@ argmax_100 = np.argmax(difference_smoothed_ts[0:100])
 argmin_100 = np.argmin(difference_smoothed_ts[0:100])
 argmax_200_400 = 200 + np.argmax(difference_smoothed_ts[200:])
 
+
 data = pd.read_csv(r"C:\Users\60848\Desktop\opt\final_data_10s.csv", index_col='Time', parse_dates=True)
 data.index #see index is datetime format
 data.loc['2020-08-01 08'] #Filter data based on one day, hour etc
+data = data.iloc[:400000,:]
+
 price_names=['X_BID','X_ASK','Y_BID','Y_ASK']
 vol_names=['X_BID_VOL','X_ASK_VOL','Y_BID_VOL','Y_ASK_VOL']
 price_df=data[price_names];vol_df=data[vol_names]
 data['X_spread']=data.X_ASK - data.X_BID; data['Y_spread']=data.Y_ASK - data.Y_BID
 spread_df=data[['X_spread','Y_spread']]
 
+
+
 # Intra-day trading strategy
 # When we refer to LONG, we are referring to the ratio of X/Y
 x_spread_ub = np.arange(10,50,10)
 y_spread_ub = np.arange(10,50,10)
 open_minute = np.linspace(5, 19, 15)
-# open_second = np.arange(10, 60, 10)
-close_minute = np.linspace(45, 59, 15)
-# close_second = np.arange(10, 60, 10)
+open_second = np.arange(0, 20, 10)
+close_minute = np.linspace(0, 10, 11)
+close_second = np.arange(20, 60, 10)
 
 # We are going to take the 30 second point within each minute (however this could also be optimised)
 intra_day_results = []
-for xs in range(len(x_spread_ub)):
-    for ys in range(len(y_spread_ub)):
-        for om in range(len(open_minute)):
-                for cm in range(len(close_minute)):
+for o in range(len(open_second)):
+    for c in range(len(close_second)):
+            # OPEN
+            open_time = datetime.time(8, np.int(0), open_second[o])
+            open_slice = data.loc[(data.index.time==open_time) & (spread_df.X_spread<20) & (spread_df.Y_spread<20)]
+            open_slice.index=open_slice.index.date
 
-                    # Print open minute & close minute
-                    print("Open minute ", int(open_minute[om]))
-                    print("Close minute", int(close_minute[cm]))
-                    print("X spread ", int(x_spread_ub[xs]))
-                    print("Y spread", int(y_spread_ub[ys]))
+            # CLOSE
+            close_time = datetime.time(13, 57, close_second[c])
+            close_slice=data.loc[data.index.time==close_time]
+            close_slice.index=close_slice.index.date
 
-                    # OPEN
-                    open_time = datetime.time(8, np.int(open_minute[om]), np.int(30))
-                    open_slice = data.loc[(data.index.time==open_time) & (spread_df.X_spread<x_spread_ub[xs]) & (spread_df.Y_spread<y_spread_ub[ys])]
-                    open_slice.index=open_slice.index.date
+            #At Open (around 8:10), go long X and short Y, and close later in the day (around 155).
+            strategy = close_slice.X_BID + open_slice.Y_BID - open_slice.X_ASK - close_slice.Y_ASK
 
-                    # CLOSE
-                    close_time = datetime.time(13, np.int(close_minute[cm]), np.int(30))
-                    close_slice=data.loc[data.index.time==close_time]
-                    close_slice.index=close_slice.index.date
+            # At open go long Y and short X, and seconds later
+            # strategy = close_slice.Y_BID + open_slice.X_BID - open_slice.Y_ASK - close_slice.X_ASK
+            strategy_clean = strategy.fillna(0)
+            cumulative_profit = np.cumsum(strategy_clean)
+            intra_day_results.append([cumulative_profit[-1], open_second[o], close_second[c]])
 
-                    #At Open (around 8:10), go long X and short Y, and close later in the day (around 155).
-                    strategy = close_slice.X_BID + open_slice.Y_BID - open_slice.X_ASK - close_slice.Y_ASK
-                    strategy_clean = strategy.fillna(0)
-                    cumulative_profit = np.cumsum(strategy_clean)
-                    intra_day_results.append([cumulative_profit[-1], open_minute[om], x_spread_ub[xs], close_minute[cm], y_spread_ub[ys]])
+    print("Iteration ", open_second[o])
 
 # Make intraday results a dataframe
 intra_day_results_df = pd.DataFrame(intra_day_results)
-intra_day_results_df.columns = ["Profit", "Open_minute", "X_spread", "Close_minute", "Y_spread"]
+intra_day_results_df.columns = ["Profit", "Open_second", "Close_second"]
 intra_day_results_df.sort_values(by="Profit")
+
 x=1
+y=2
