@@ -45,12 +45,12 @@ for c in range(len(crisis_list)):
 
     while len(sim_sharpe) < 250000:
         # First pick n sectors at random
-        sector_sequence = list(np.linspace(0, len(prices.iloc[0]) - 1, len(prices.iloc[0])))  # Randomly draw sector numbers
+        sector_sequence = list(np.linspace(0, len(prices_clean.iloc[0]) - 1, len(prices_clean.iloc[0])))  # Randomly draw sector numbers
         random_list_sector = random.sample(sector_sequence, num_stocks)
         ints = [int(item) for item in random_list_sector]
 
         # Select random stocks
-        random_price = prices.iloc[:, ints] # Slice specific stocks
+        random_price = prices_clean.iloc[:, ints] # Slice specific stocks
         random_sectors = sectors[ints]
         random_stocks = stocks[ints]
 
