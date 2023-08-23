@@ -19,7 +19,8 @@ portfolio_ub = 100
 k_grid = np.arange(portfolio_lb,portfolio_ub,1)
 
 # Loop over time grid
-model_params = []
+model1_params = []
+model2_params = []
 for i in range(len(time_grid)):
     print("Test ", time_grid[i])
     # Slice time point
@@ -42,7 +43,7 @@ for i in range(len(time_grid)):
     linear_ones = sm.tools.tools.add_constant(x1)
     linear_quadratic_ones = sm.tools.tools.add_constant(linear_quadratic)
 
-    # Model 1 statsmodels: linear  #
+    # Model 1 statsmodels: linear
     model1 = sm.OLS(y, linear_ones)
     results1 = model1.fit()
     # AIC/BIC/Adjusted R2
@@ -50,6 +51,8 @@ for i in range(len(time_grid)):
     m1_bic = results1.bic
     m1_r2a = results1.rsquared_adj
     m1_pvals = results1.pvalues
+    # Append parameters to Model 1 list
+    model1_params.append([time_grid[i], m1_aic, m1_bic, m1_r2a, m1_pvals])
 
     # Model 1 statsmodels: linear + Quadratic
     model2 = sm.OLS(y, linear_quadratic_ones)
@@ -59,8 +62,16 @@ for i in range(len(time_grid)):
     m2_bic = results2.bic
     m2_r2a = results2.rsquared_adj
     m2_pvals = results2.pvalues
+    # Append parameters to Model 2 list
+    model2_params.append([time_grid[i], m2_aic, m2_bic, m2_r2a, m2_pvals])
 
-    j=1
-    k=2
+# Model parameters
+m1_params_df = pd.DataFrame(model1_params)
+m2_params_df = pd.DataFrame(model2_params)
+m1_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
+m2_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
+
+x=1
+y=2
 
 
