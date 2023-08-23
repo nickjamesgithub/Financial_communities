@@ -65,11 +65,25 @@ for i in range(len(time_grid)):
     # Append parameters to Model 2 list
     model2_params.append([time_grid[i], m2_aic, m2_bic, m2_r2a, m2_pvals])
 
+    # Model 1, Model 2, Model 3, Model 4 fit (statsmodels)
+    fig, ax = plt.subplots()
+    grid = np.linspace(10,100,91)
+    plt.plot(grid, results1.fittedvalues, label="Model 1", alpha=0.6)
+    plt.plot(grid, results2.fittedvalues, label="Model 2", alpha=0.6)
+    plt.scatter(grid, y, label="data", color='red')
+    plt.locator_params(axis='x', nbins=4)
+    plt.ylabel("Sharpe Ratio")
+    plt.xlabel("Portfolio_size")
+    plt.legend()
+    # plt.title(events_list_m[i]+"_"+gender_labels[g] + "_" + str(top))
+    plt.savefig("Portfolio_size_regression_"+str(time_grid[i]))
+    plt.show()
+
 # Model parameters
 m1_params_df = pd.DataFrame(model1_params)
 m2_params_df = pd.DataFrame(model2_params)
-m1_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
-m2_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
+# m1_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
+# m2_params_df.columns = ["AIC", "BIC", "Adj_R2", "P-values"]
 
 x=1
 y=2
