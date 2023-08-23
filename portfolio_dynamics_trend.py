@@ -42,7 +42,7 @@ for i in range(len(time_grid)):
     linear_ones = sm.tools.tools.add_constant(x1)
     linear_quadratic_ones = sm.tools.tools.add_constant(linear_quadratic)
 
-    # Model 1 statsmodels: linear
+    # Model 1 statsmodels: linear  #
     model1 = sm.OLS(y, linear_ones)
     results1 = model1.fit()
     # AIC/BIC/Adjusted R2
