@@ -86,9 +86,9 @@ for s in range(block_rate, length_simulation, block_rate): # len(prices_clean)
         p_90 = np.percentile(sim_sharpe, 90)
         portfolio_combination_list.append([s, num_stocks_iterate, p_10, p_50, p_90])
 
-# Make portfolio combination list a Dataframe
-portfolio_combination_df = pd.DataFrame(portfolio_combination_list)
-portfolio_combination_df.to_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
+# # Make portfolio combination list a Dataframe
+# portfolio_combination_df = pd.DataFrame(portfolio_combination_list)
+# portfolio_combination_df.to_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
 
 x=1
 y=2
