@@ -16,15 +16,15 @@ ukraine_stock = [0.419, 0.392, 0.387, 0.386, 0.386, 0.38, 0.377, 0.375]
 
 # Plot across stock diversification
 grid = np.linspace(2,9,len(dot_com_stock))
-plt.plot(grid, dot_com_stock, label="Dot-com stock", color='red')
-plt.plot(grid, dot_com_sector, label="Dot-com sector", color='red', linestyle='dotted')
-plt.plot(grid, gfc_stock, label="GFC stock", color='blue')
-plt.plot(grid, gfc_sector, label="GFC sector", color='blue', linestyle='dotted')
-plt.plot(grid, covid_stock, label="COVID-19 stock", color='green')
-plt.plot(grid, covid_sector, label="COVID-19 sector", color='green', linestyle='dotted')
-plt.plot(grid, ukraine_stock, label="Ukraine stock", color='black', alpha=0.3)
-plt.plot(grid, ukraine_sector, label="Ukraine sector", color='black', alpha=0.3, linestyle='dotted')
-plt.xlabel("Number of Stocks")
+plt.scatter(grid, dot_com_stock, marker = 'x', label="Dot-com stock", color='red')
+plt.scatter(grid, dot_com_sector,marker = 'x', label="Dot-com sector", color='red', linestyle='dotted')
+plt.scatter(grid, gfc_stock,marker = 'x', label="GFC stock", color='blue')
+plt.scatter(grid, gfc_sector,marker = 'x', label="GFC sector", color='blue', linestyle='dotted')
+plt.scatter(grid, covid_stock,marker = 'x', label="Covid-19 stock", color='green')
+plt.scatter(grid, covid_sector,marker = 'x', label="Covid-19 sector", color='green', linestyle='dotted')
+plt.scatter(grid, ukraine_stock,marker = 'x', label="Ukraine stock", color='black', alpha=0.3)
+plt.scatter(grid, ukraine_sector,marker = 'x', label="Ukraine sector", color='black', alpha=0.3, linestyle='dotted')
+plt.xlabel("Number of diversification decisions")
 plt.ylabel("Average market collectivity")
 plt.legend()
 plt.savefig("Sequential_diversification")
@@ -33,7 +33,6 @@ plt.show()
 # Covid paths
 covid_4_9 = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/lambda_paths/_covid_4_9.csv")
 covid_9_4 = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/lambda_paths/_covid_9_4.csv")
-
 
 def get_lambda_terms(df):
     l_95 = df.iloc[0,1:]
@@ -49,7 +48,7 @@ date_index_plot_covid = pd.date_range('13-03-2020','02-09-2020',len(l_95_49)).st
 # gfc - 5/1/2007 - 5/5/2010
 # plot lambda 1 and the uncertainties
 fig, ax = plt.subplots()
-plt.plot(date_index_plot_covid, l_50_49, color='red', label="4,9 mean") # 3,9
+plt.scatter(date_index_plot_covid, l_50_49, color='red', label="4,9 mean") # 3,9
 plt.fill_between(date_index_plot_covid, l_5_49, l_95_49, alpha=0.1, color='red', label="4,9 uncertainty") # 3,9
 plt.plot(date_index_plot_covid, l_50_94, color='blue', label="9,4 mean") # 9,3
 plt.fill_between(date_index_plot_covid, l_5_94, l_95_94, alpha=0.1, color='blue', label="9,4 uncertainty") # 9,3

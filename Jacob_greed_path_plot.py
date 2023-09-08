@@ -8,11 +8,17 @@ covid = [.631, .578, .555, .533, .516, .501, .514, .507, .507, .497, .502, .500]
 ukraine = [0.512, 0.457, 0.414, 0.402, 0.37, 0.37, 0.365, 0.364, 0.351, 0.353, 0.351]
 
 # Plot of 4 line plots
-plt.plot(dot_com, label= "Dot-com")
-plt.plot(gfc, label= "GFC")
-plt.plot(covid, label= "Covid-19")
-plt.plot(ukraine, label= "Ukraine")
-plt.xlabel("# diversification decisions")
+grid_dc = np.linspace(1,len(dot_com),len(dot_com))
+grid_gfc = np.linspace(1,len(gfc),len(gfc))
+grid_covid = np.linspace(1,len(covid),len(covid))
+grid_ukraine = np.linspace(1,len(ukraine),len(ukraine))
+
+# plot grids
+plt.scatter(grid_dc, dot_com, label= "Dot-com", marker='x')
+plt.scatter(grid_gfc, gfc, label= "GFC", marker='x')
+plt.scatter(grid_covid, covid, label= "Covid-19", marker='x')
+plt.scatter(grid_ukraine, ukraine, label= "Ukraine", marker='x')
+plt.xlabel("Number of diversification decisions")
 plt.ylabel("Average collectivity")
 plt.legend()
 plt.savefig("Greedy_paths")

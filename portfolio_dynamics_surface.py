@@ -38,9 +38,10 @@ for i in range(len(time_grid)):
         sharpes_list_10.append(data_time_k_slice["decile_10"].iloc[0])
 
     # Plot incremental Sharpe Ratio
-    plt.plot(sharpes_list_10, label="10th percentile", alpha = 0.5)
-    plt.plot(sharpes_list_50, label="50th percentile", alpha = 0.5)
-    plt.plot(sharpes_list_90, label="90th percentile", alpha = 0.5)
+    grid = np.linspace(10,len(sharpes_list_90),90)
+    plt.plot(grid, sharpes_list_10, label="10th percentile", alpha = 0.5)
+    plt.plot(grid, sharpes_list_50, label="50th percentile", alpha = 0.5)
+    plt.plot(grid, sharpes_list_90, label="90th percentile", alpha = 0.5)
     plt.xlabel("Portfolio size")
     plt.ylabel("Sharpe Ratio")
     plt.legend()

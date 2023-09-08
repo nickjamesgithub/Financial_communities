@@ -19,6 +19,7 @@ log_returns = np.log(data).diff()[1:]
 
 # Slice data for specific dates of financial crises
 dotcom_returns = log_returns.iloc[146:794,:]
+dotcom_peak_returns = log_returns.iloc[0:166,:] # Inception - 31/3/2000
 gfc_returns = log_returns.iloc[1865:2703,:]
 gfc_peak_returns = log_returns.iloc[2284:2471,:]
 covid_returns = log_returns.iloc[5184:5304,:]
@@ -32,6 +33,10 @@ dotcom_corr = dotcom_returns.corr()
 # DotCom distribution
 dotcom_values = flatten_dataframe(dotcom_returns)
 dotcom_values_array = np.array(dotcom_values).flatten()
+
+# DotCom Peak distribution
+dotcom_peak_values = flatten_dataframe(dotcom_peak_returns)
+dotcom_peak_values_array = np.array(dotcom_peak_values).flatten()
 
 # GFC distribution
 gfc_values = flatten_dataframe(gfc_returns)
@@ -62,9 +67,10 @@ print("Ukraine median", np.median(ukraine_crash_values_array))
 
 # Histogram plots
 plt.hist(dotcom_values_array, bins=100, alpha=0.2, label='Dot-com')
+plt.hist(dotcom_peak_values_array, bins=100, alpha=0.2, label='Dot-com super-bubble')
 plt.hist(gfc_values_array, bins=100, alpha=0.2, label='GFC')
-plt.hist(covid_values_array, bins=100, alpha=0.2, label='COVID')
-plt.hist(covid_peak_values_array, bins=100, alpha=0.2, label='COVID Peak')
+plt.hist(covid_values_array, bins=100, alpha=0.2, label='Covid-19')
+plt.hist(covid_peak_values_array, bins=100, alpha=0.2, label='Covid-19 Peak')
 plt.hist(ukraine_crash_values_array, bins=100, alpha=0.3, label='2022 Crash', color='red')
 plt.legend()
 plt.ylabel("Frequency")
