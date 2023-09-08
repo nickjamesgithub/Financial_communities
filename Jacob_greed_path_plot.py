@@ -13,7 +13,7 @@ grid_gfc = np.linspace(1,len(gfc),len(gfc))
 grid_covid = np.linspace(1,len(covid),len(covid))
 grid_ukraine = np.linspace(1,len(ukraine),len(ukraine))
 
-# plot grids
+# plot greedy paths
 plt.scatter(grid_dc, dot_com, label= "Dot-com", marker='x')
 plt.scatter(grid_gfc, gfc, label= "GFC", marker='x')
 plt.scatter(grid_covid, covid, label= "Covid-19", marker='x')
