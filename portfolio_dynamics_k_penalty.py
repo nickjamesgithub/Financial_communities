@@ -14,12 +14,12 @@ prices.columns = prices.columns.str.replace('(\.\d+)$', '')
 date_index = prices.index
 
 # Import data
-data = pd.read_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
+data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
 data.columns = ["Index", "Time", "portfolio_k", "decile_10", "decile_50", "decile_90"]
 
 # Set up initial parameters
-idx_length = 250
-upper_bound = 5500
+idx_length = 252
+upper_bound = 5796
 time_grid = np.arange(idx_length, upper_bound, idx_length)
 portfolio_lb = 10
 portfolio_ub = 100

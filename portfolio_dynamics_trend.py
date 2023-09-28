@@ -6,15 +6,17 @@ from sklearn.metrics import mean_squared_error, r2_score
 import re
 import statsmodels.api as sm
 
-make_plots = False
+#todo NOTE LABELLING IS HARDCODED IN THE PLOT
+
+make_plots = True
 
 # Import data
-data = pd.read_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
+data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
 data.columns = ["Index", "Time", "portfolio_k", "decile_10", "decile_50", "decile_90"]
 
 # Set up initial parameters
-idx_length = 250
-upper_bound = 5500
+idx_length = 252
+upper_bound = 5796
 time_grid = np.arange(idx_length, upper_bound, idx_length)
 portfolio_lb = 10
 portfolio_ub = 100
@@ -33,7 +35,8 @@ for i in range(len(time_grid)):
     decile_10 = data_time_slice["decile_10"]
 
     # Slice response variable and two predictors
-    y = np.array(decile_90).reshape(-1, 1)
+    #todo this is where Y comes in
+    y = np.array(decile_10).reshape(-1, 1)
     x1 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1))  # Linear
     x1_ones = sm.tools.tools.add_constant(x1)
     x2 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1))**2  # Quadratic
@@ -79,14 +82,11 @@ for i in range(len(time_grid)):
         plt.xlabel("Portfolio_size")
         plt.legend()
         # plt.title(events_list_m[i]+"_"+gender_labels[g] + "_" + str(top))
-        plt.savefig("Portfolio_size_regression_"+str(time_grid[i]))
+        plt.savefig("Portfolio_size_regression_d10_"+str(time_grid[i]))
         plt.show()
 
 # Model parameters
 m1_params_df = pd.DataFrame(model1_params)
 m2_params_df = pd.DataFrame(model2_params)
-
-x=1
-y=2
 
 

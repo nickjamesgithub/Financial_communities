@@ -13,15 +13,15 @@ prices.columns = prices.columns.str.replace('(\.\d+)$', '')
 v_counts = prices.columns.value_counts()
 
 # Clean prices
-prices_clean = prices.iloc[:, 1:]
+prices_clean = prices.iloc[106:, 1:]
 prices_clean = prices_clean.dropna(axis=1)
 
 # initialise smoothing rate
-block_rate = 250
+block_rate = 252
 portfolio_lb = 10
 portfolio_ub = 100
 portfolio_mix = portfolio_ub - portfolio_lb + 1
-length_simulation = 5750
+length_simulation = 5796
 num_simulations = 1000 # 1000
 portfolio_combination_list = []
 
@@ -86,9 +86,7 @@ for s in range(block_rate, length_simulation, block_rate): # len(prices_clean)
         p_90 = np.percentile(sim_sharpe, 90)
         portfolio_combination_list.append([s, num_stocks_iterate, p_10, p_50, p_90])
 
-# # Make portfolio combination list a Dataframe
-# portfolio_combination_df = pd.DataFrame(portfolio_combination_list)
-# portfolio_combination_df.to_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
+# Make portfolio combination list a Dataframe
+portfolio_combination_df = pd.DataFrame(portfolio_combination_list)
+portfolio_combination_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
 
-x=1
-y=2

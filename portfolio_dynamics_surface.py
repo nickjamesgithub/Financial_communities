@@ -6,13 +6,19 @@ import datetime
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
+surface = pd.read_csv("/Users/tassjames/Desktop/Continuous_Sharpe.csv")
+
+# plot surface
+plt.matshow(np.array(surface))
+plt.show()
+
 # Import data
-data = pd.read_csv("/Users/tassjames/Desktop/portfolio_optimisation_k.csv")
+data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
 data.columns = ["Index", "Time", "portfolio_k", "decile_10", "decile_50", "decile_90"]
 
 # Set up initial parameters
-idx_length = 250
-upper_bound = 5500
+idx_length = 252
+upper_bound = 5796
 time_grid = np.arange(idx_length, upper_bound, idx_length)
 portfolio_lb = 10
 portfolio_ub = 100
@@ -53,26 +59,3 @@ for i in range(len(time_grid)):
     sharpes_list_90_surface = np.repeat([sharpes_list_90], idx_length, axis=0)
     sharpes_surface_90 = np.reshape(sharpes_list_90_surface, (idx_length, (portfolio_ub-portfolio_lb)))
     grid_surface_90.append(sharpes_surface_90)
-
-# Flatten grid surface
-grid_surface_flat_90 = list(itertools.chain.from_iterable(grid_surface_90))
-grid_surface_reshape_90 = np.reshape(grid_surface_flat_90, (5250,90))
-
-# Surface plot
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-ax.view_init(25, 330)
-portfolio_size = np.linspace(10, 90, 90)
-date_index = pd.date_range("2018-01-01", "2022-06-09", freq='D').strftime('%Y-%m-%d')
-# time_array = np.array(date_index)
-time_array = np.linspace(2000, 2022, len(grid_surface_reshape_90))
-X, Y = np.meshgrid(portfolio_size, time_array)
-
-# Plot the surface.
-surf = ax.plot_surface(X, Y, grid_surface_reshape_90, cmap=cm.plasma, linewidth=0.25, antialiased=True)
-plt.xlabel("Portfolio_size")
-plt.ylabel("Time")
-ax.yaxis.set_major_locator(plt.MaxNLocator(3))
-ax.set_zlabel("Sharpe")
-plt.savefig("3d_surface_portfolio")
-plt.show()
