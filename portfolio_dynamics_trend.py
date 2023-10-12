@@ -9,6 +9,7 @@ import statsmodels.api as sm
 #todo NOTE LABELLING IS HARDCODED IN THE PLOT
 
 make_plots = True
+model_choice = "decile_10"
 
 # Import data
 data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
@@ -36,7 +37,12 @@ for i in range(len(time_grid)):
 
     # Slice response variable and two predictors
     #todo this is where Y comes in
-    y = np.array(decile_10).reshape(-1, 1)
+    if model_choice == "decile_10":
+        y = np.array(decile_10).reshape(-1, 1)
+    if model_choice == "decile_50":
+        y = np.array(decile_50).reshape(-1, 1)
+    if model_choice == "decile_90":
+        y = np.array(decile_90).reshape(-1, 1)
     x1 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1))  # Linear
     x1_ones = sm.tools.tools.add_constant(x1)
     x2 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1))**2  # Quadratic
@@ -52,23 +58,25 @@ for i in range(len(time_grid)):
     model1 = sm.OLS(y, linear_ones)
     results1 = model1.fit()
     # AIC/BIC/Adjusted R2
+    m1_params = results1.params
     m1_aic = results1.aic
     m1_bic = results1.bic
     m1_r2a = results1.rsquared_adj
     m1_pvals = results1.pvalues
     # Append parameters to Model 1 list
-    model1_params.append([time_grid[i], m1_aic, m1_bic, m1_r2a, m1_pvals])
+    model1_params.append([time_grid[i], m1_params, m1_aic, m1_bic, m1_r2a, m1_pvals])
 
     # Model 1 statsmodels: linear + Quadratic
     model2 = sm.OLS(y, linear_quadratic_ones)
     results2 = model2.fit()
     # AIC/BIC/Adjusted R2
+    m2_params = results2.params
     m2_aic = results2.aic
     m2_bic = results2.bic
     m2_r2a = results2.rsquared_adj
     m2_pvals = results2.pvalues
     # Append parameters to Model 2 list
-    model2_params.append([time_grid[i], m2_aic, m2_bic, m2_r2a, m2_pvals])
+    model2_params.append([time_grid[i], m2_params, m2_aic, m2_bic, m2_r2a, m2_pvals])
 
     if make_plots:
         # Model 1, Model 2, Model 3, Model 4 fit (statsmodels)
@@ -82,11 +90,13 @@ for i in range(len(time_grid)):
         plt.xlabel("Portfolio_size")
         plt.legend()
         # plt.title(events_list_m[i]+"_"+gender_labels[g] + "_" + str(top))
-        plt.savefig("Portfolio_size_regression_d10_"+str(time_grid[i]))
+        plt.savefig("Portfolio_size_regression"+model_choice+"_"+str(time_grid[i]))
         plt.show()
 
 # Model parameters
 m1_params_df = pd.DataFrame(model1_params)
 m2_params_df = pd.DataFrame(model2_params)
-
-
+m1_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values"]
+m2_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values"]
+m1_params_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/model_1_params_"+model_choice+".csv")
+m2_params_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/model_2_params_"+model_choice+".csv")
