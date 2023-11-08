@@ -6,11 +6,11 @@ import datetime
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
-surface = pd.read_csv("/Users/tassjames/Desktop/Continuous_Sharpe.csv")
+# surface = pd.read_csv("/Users/tassjames/Desktop/Continuous_Sharpe.csv")
 
-# plot surface
-plt.matshow(np.array(surface))
-plt.show()
+# # plot surface
+# plt.matshow(np.array(surface))
+# plt.show()
 
 # Import data
 data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
@@ -51,8 +51,8 @@ for i in range(len(time_grid)):
     plt.xlabel("Portfolio size")
     plt.ylabel("Sharpe Ratio")
     plt.legend()
-    plt.title("Time_period_" +str(time_grid[i]))
-    plt.savefig("Portfolio_diversification_size_percentile_"+str(time_grid[i]))
+    # plt.title("Time_period_" +str(time_grid[i]))
+    plt.savefig("Portfolio_diversification_size_percentile_"+str(time_grid[i])+"_unlabelled")
     plt.show()
 
     # Repeat surface and reshape

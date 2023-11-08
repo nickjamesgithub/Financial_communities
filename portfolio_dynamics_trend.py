@@ -8,8 +8,8 @@ import statsmodels.api as sm
 
 #todo NOTE LABELLING IS HARDCODED IN THE PLOT
 
-make_plots = True
-model_choice = "decile_10"
+make_plots = False
+model_choice = "decile_90" # decile_10, decile_50, decile_90
 
 # Import data
 data = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_yearly.csv")
@@ -63,8 +63,11 @@ for i in range(len(time_grid)):
     m1_bic = results1.bic
     m1_r2a = results1.rsquared_adj
     m1_pvals = results1.pvalues
+    # Model 1 optimal values
+    k0_m1 = np.argmax(results1.fittedvalues) + 1
+    k_hat_m1 = np.argmax(y) + 1
     # Append parameters to Model 1 list
-    model1_params.append([time_grid[i], m1_params, m1_aic, m1_bic, m1_r2a, m1_pvals])
+    model1_params.append([time_grid[i], m1_params, m1_aic, m1_bic, m1_r2a, m1_pvals, k0_m1, k_hat_m1])
 
     # Model 1 statsmodels: linear + Quadratic
     model2 = sm.OLS(y, linear_quadratic_ones)
@@ -75,8 +78,11 @@ for i in range(len(time_grid)):
     m2_bic = results2.bic
     m2_r2a = results2.rsquared_adj
     m2_pvals = results2.pvalues
+    # Model 1 optimal values
+    k0_m2 = np.argmax(results2.fittedvalues) + 1
+    k_hat_m2 = np.argmax(y) + 1
     # Append parameters to Model 2 list
-    model2_params.append([time_grid[i], m2_params, m2_aic, m2_bic, m2_r2a, m2_pvals])
+    model2_params.append([time_grid[i], m2_params, m2_aic, m2_bic, m2_r2a, m2_pvals, k0_m2, k_hat_m2])
 
     if make_plots:
         # Model 1, Model 2, Model 3, Model 4 fit (statsmodels)
@@ -96,7 +102,7 @@ for i in range(len(time_grid)):
 # Model parameters
 m1_params_df = pd.DataFrame(model1_params)
 m2_params_df = pd.DataFrame(model2_params)
-m1_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values"]
-m2_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values"]
+m1_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values", "k_0", "k_hat"]
+m2_params_df.columns = ["Time", "Parameters", "AIC", "BIC", "Adjusted_R2", "p_values", "k_0", "k_hat"]
 m1_params_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/model_1_params_"+model_choice+".csv")
 m2_params_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/results/model_2_params_"+model_choice+".csv")
