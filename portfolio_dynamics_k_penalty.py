@@ -7,6 +7,7 @@ import re
 import statsmodels.api as sm
 
 make_plots = False
+model_choice = "decile_10" # decile_10, decile_50, decile_90
 
 # Import data
 prices = pd.read_csv("/Users/tassjames/Desktop/jacob_financial_crises/Jacob_data_real.csv", index_col='Date')
@@ -32,11 +33,23 @@ for i in range(len(time_grid)):
     # Slice time point
     data_time_slice = data.loc[data["Time"]==time_grid[i]]
     # Get sharpe ratios
+    decile_90 = data_time_slice["decile_90"]
+    decile_50 = data_time_slice["decile_50"]
     decile_10 = data_time_slice["decile_10"]
+
+    # Slice response variable and two predictors
+    if model_choice == "decile_10":
+        y = np.array(decile_10).reshape(-1, 1)
+    if model_choice == "decile_50":
+        y = np.array(decile_50).reshape(-1, 1)
+    if model_choice == "decile_90":
+        y = np.array(decile_90).reshape(-1, 1)
+    x1 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1))  # Linear
+    x1_ones = sm.tools.tools.add_constant(x1)
+    x2 = np.reshape(np.linspace(10, 100, 91), (len(decile_90), 1)) ** 2  # Quadratic
 
     # Estimate beta for regression coefficient
     # Slice response variable and reformat for data structure
-    y = np.array(decile_10).reshape(-1, 1)
     x1 = np.reshape(np.linspace(10, 100, 91), (len(decile_10), 1))  # Linear
     x1_ones = sm.tools.tools.add_constant(x1)
 
@@ -55,17 +68,17 @@ for i in range(len(time_grid)):
     penalty_grid = np.linspace(portfolio_lb, portfolio_ub, portfolio_ub-portfolio_lb)
     penalised_sharpe_list = []
     for p in range(len(penalty_grid)):
-        sharpe_penalty = decile_10.iloc[p] - penalty_grid[p] * beta
+        sharpe_penalty = y[p] - penalty_grid[p] * beta
         penalised_sharpe_list.append(sharpe_penalty)
     # Compute Argmax
-    raw_argmax = np.argmax(decile_10)
+    raw_argmax = np.argmax(y)
     penalised_argmax = np.argmax(penalised_sharpe_list)
-    optimal_cardinality_list.append([time_grid[i], date_index[time_grid[i]], raw_argmax, penalised_argmax, np.array(decile_10)[raw_argmax], np.array(decile_10)[penalised_argmax]])
+    optimal_cardinality_list.append([time_grid[i], date_index[time_grid[i]], raw_argmax, penalised_argmax, np.array(y)[raw_argmax], np.array(y)[penalised_argmax]])
 
 # Optimal cardinality dataframe
 optimal_cardinality_df = pd.DataFrame(optimal_cardinality_list)
 optimal_cardinality_df.columns = ["Time", "Date_index", "Unpenalised_argmax", "Penalised_argmax", "Sharpe_unpenalised_max", "Sharpe_penalised_max"]
-optimal_cardinality_df.to_csv("/Users/tassjames/Desktop/portfolio_optimisation_k_penalty.csv")
+optimal_cardinality_df.to_csv("/Users/tassjames/Desktop/jacob_financial_crises/portfolio_optimisation_k_penalty_"+model_choice+".csv")
 
 # Generate deviation column
 optimal_cardinality_df["Deviation"] = optimal_cardinality_df["Sharpe_unpenalised_max"] - optimal_cardinality_df["Sharpe_penalised_max"]

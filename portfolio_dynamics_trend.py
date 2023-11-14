@@ -6,8 +6,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 import re
 import statsmodels.api as sm
 
-#todo NOTE LABELLING IS HARDCODED IN THE PLOT
-
 make_plots = False
 model_choice = "decile_90" # decile_10, decile_50, decile_90
 
@@ -36,7 +34,6 @@ for i in range(len(time_grid)):
     decile_10 = data_time_slice["decile_10"]
 
     # Slice response variable and two predictors
-    #todo this is where Y comes in
     if model_choice == "decile_10":
         y = np.array(decile_10).reshape(-1, 1)
     if model_choice == "decile_50":
@@ -64,8 +61,8 @@ for i in range(len(time_grid)):
     m1_r2a = results1.rsquared_adj
     m1_pvals = results1.pvalues
     # Model 1 optimal values
-    k0_m1 = np.argmax(results1.fittedvalues) + 1
-    k_hat_m1 = np.argmax(y) + 1
+    k0_m1 = np.argmax(y) + 1
+    k_hat_m1 = np.argmax(results1.fittedvalues) + 1
     # Append parameters to Model 1 list
     model1_params.append([time_grid[i], m1_params, m1_aic, m1_bic, m1_r2a, m1_pvals, k0_m1, k_hat_m1])
 
@@ -78,9 +75,9 @@ for i in range(len(time_grid)):
     m2_bic = results2.bic
     m2_r2a = results2.rsquared_adj
     m2_pvals = results2.pvalues
-    # Model 1 optimal values
-    k0_m2 = np.argmax(results2.fittedvalues) + 1
-    k_hat_m2 = np.argmax(y) + 1
+    # Model 2 optimal values
+    k0_m2 = np.argmax(y) + 1
+    k_hat_m2 = np.argmax(results2.fittedvalues) + 1
     # Append parameters to Model 2 list
     model2_params.append([time_grid[i], m2_params, m2_aic, m2_bic, m2_r2a, m2_pvals, k0_m2, k_hat_m2])
 
